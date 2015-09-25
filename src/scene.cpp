@@ -48,6 +48,7 @@ void Scene::activate() {
         /* Create a default (independent) sampler */
         m_sampler = static_cast<Sampler*>(
             NoriObjectFactory::createInstance("independent", PropertyList()));
+        m_sampler->activate();
     }
 
     cout << endl;

@@ -31,6 +31,7 @@ add_executable(nori
   include/nori/proplist.h
   include/nori/photon.h
   include/nori/ray.h
+  include/nori/render.h
   include/nori/rfilter.h
   include/nori/sampler.h
   include/nori/scene.h
@@ -48,6 +49,7 @@ add_executable(nori
   src/chi2test.cpp
   src/common.cpp
   src/consttexture.cpp
+  src/checkerboard.cpp
   src/diffuse.cpp
   src/gui.cpp
   src/independent.cpp
@@ -58,6 +60,7 @@ add_executable(nori
   src/parser.cpp
   src/perspective.cpp
   src/proplist.cpp
+  src/render.cpp
   src/rfilter.cpp
   src/scene.cpp
   src/shape.cpp
@@ -68,6 +71,7 @@ add_executable(nori
   src/mirror.cpp
   src/dielectric.cpp
   src/photonmapper.cpp
+  src/sphere.cpp
 )
 
 # The following lines build the warping test application

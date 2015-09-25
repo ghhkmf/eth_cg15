@@ -1,7 +1,7 @@
 /*
     This file is part of Nori, a simple educational ray tracer
 
-    Copyright (c) 2015 by Wenzel Jakob
+    Copyright (c) 2015 by Wenzel Jakob, Romain Prévost
 
     Nori is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
@@ -80,9 +80,11 @@ public:
             Eigen::Translation<float, 3>(1.0f, -1.0f/aspect, 0.0f) * perspective).inverse();
 
         /* If no reconstruction filter was assigned, instantiate a Gaussian filter */
-        if (!m_rfilter)
+        if (!m_rfilter) {
             m_rfilter = static_cast<ReconstructionFilter *>(
-                NoriObjectFactory::createInstance("gaussian", PropertyList()));
+                    NoriObjectFactory::createInstance("gaussian", PropertyList()));
+            m_rfilter->activate();
+        }
     }
 
     Color3f sampleRay(Ray3f &ray,

@@ -59,6 +59,8 @@ public:
     
     /// Release all memory
     ~ImageBlock();
+
+    void init(const Vector2i &size, const ReconstructionFilter *filter);
     
     /// Configure the offset of the block within the main image
     void setOffset(const Point2i &offset) { m_offset = offset; }

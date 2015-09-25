@@ -64,6 +64,7 @@ public:
             PropertyList l;
             l.setColor("value", Color3f(0.5f));
             m_albedo = static_cast<Texture<Color3f> *>(NoriObjectFactory::createInstance("constant_color", l));
+            m_albedo->activate();
         }
     }
 

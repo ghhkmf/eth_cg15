@@ -24,8 +24,33 @@
 
 NORI_NAMESPACE_BEGIN
 
-ImageBlock::ImageBlock(const Vector2i &size, const ReconstructionFilter *filter) 
-        : m_offset(0, 0), m_size(size), m_blockId(0) {
+ImageBlock::ImageBlock(const Vector2i &size, const ReconstructionFilter *filter) {
+    init(size,filter);
+}
+
+ImageBlock::~ImageBlock() {
+    delete[] m_filter;
+    delete[] m_weightsX;
+    delete[] m_weightsY;
+}
+
+
+void ImageBlock::init(const Vector2i &size, const ReconstructionFilter *filter) {
+    m_offset = Point2i(0, 0);
+    m_size = size;
+    m_borderSize = 0;
+    m_filterRadius = 0;
+    m_lookupFactor = 0;
+    m_blockId = 0;
+
+    if(m_filter) {
+        delete[] m_filter;
+        delete[] m_weightsX;
+        delete[] m_weightsY;
+        m_filter = nullptr;
+        m_weightsX = nullptr;
+        m_weightsY = nullptr;
+    }
     if (filter) {
         /* Tabulate the image reconstruction filter for performance reasons */
         m_filterRadius = filter->getRadius();
@@ -46,12 +71,6 @@ ImageBlock::ImageBlock(const Vector2i &size, const ReconstructionFilter *filter)
 
     /* Allocate space for pixels and border regions */
     resize(size.y() + 2*m_borderSize, size.x() + 2*m_borderSize);
-}
-
-ImageBlock::~ImageBlock() {
-    delete[] m_filter;
-    delete[] m_weightsX;
-    delete[] m_weightsY;
 }
 
 Bitmap *ImageBlock::toBitmap() const {
