@@ -72,6 +72,8 @@ add_executable(nori
   src/dielectric.cpp
   src/photonmapper.cpp
   src/sphere.cpp
+  src/normals.cpp
+  src/averagevisibility.cpp
 )
 
 # The following lines build the warping test application
