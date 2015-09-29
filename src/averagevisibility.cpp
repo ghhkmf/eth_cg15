@@ -28,7 +28,7 @@ public:
 
 
 	/* Create ray with length: m_rayLength */	
-	Ray3f second_ray(its.p,ray_direction,0,m_rayLength);
+	Ray3f second_ray(its.p,ray_direction,m_t_threshold,m_rayLength);
 
 
 	Intersection its2;
@@ -36,7 +36,6 @@ public:
 
 
 	if(scene->rayIntersect(second_ray,its2)){
-		if(its2.t>m_t_threshold)
 			return Color3f(0.0f);
 	}
 
@@ -53,7 +52,7 @@ public:
 
 private:
   float m_rayLength;
-  float m_t_threshold=1e-6;
+  float m_t_threshold=1e-4;
 };
 
 NORI_REGISTER_CLASS(AverageVisibilityIntegrator, "av");
