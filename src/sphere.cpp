@@ -38,13 +38,51 @@ public:
 
     virtual bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const override {
 
-	/* to be implemented */
+    	float cod =(m_position-ray.o).dot(ray.d);
+
+    	if(cod<0 && (m_position-ray.o).squaredNorm() > m_radius){
+    		// ray.d in other direction as Sphere and not IN sphere
+    		return false;
+    	}
+
+    	float D_2 = (m_position-ray.o).squaredNorm() - (cod*cod) ;
+
+    	if (D_2 > m_radius*m_radius){
+    		// No  intersection. Ray passes by
+    		return false;
+    	}
+
+    	float t_cand = cod - sqrt(m_radius*m_radius-D_2);
+
+    	t=t_cand;
+    	if(t_cand >= ray.mint && t_cand <= ray.maxt){
+
+    		return true;
+    	}
+
         return false;
 
     }
 
     virtual void setHitInformation(uint32_t index, const Ray3f &ray, Intersection & its) const override {
-        /* to be implemented */
+
+
+    	//Intersection Point
+		its.p = ray.o+ray.d*its.t;
+
+		Vector3f relVec = (its.p-m_position).normalized();
+
+
+		// UV Coordinates u-arctan2, v-arccos
+		Point2f s_cord = sphericalCoordinates(relVec);
+		s_cord[0]=s_cord[0]/M_PI; 						// 0 Pi - s_cord[0]
+	    s_cord[1]=0.5+s_cord[1]/(M_PI) ;				// -Pi/2 PI/2 - s_cord[1]
+	    its.uv=s_cord;
+
+		// Geometric Frame
+		its.geoFrame = Frame(relVec);
+		its.shFrame = Frame(relVec);
+
     }
 
 
