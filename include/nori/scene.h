@@ -59,6 +59,9 @@ public:
     /// Return a reference to an array containing all shapes
     const std::vector<Shape *> &getShapes() const { return m_shapes; }
 
+    /// Return a reference to an array containing all emitters
+       const std::vector<Emitter *> &getEmitters() const { return m_emitters; }
+
     /**
      * \brief Intersect a ray against all triangles stored in the scene
      * and return detailed intersection information
@@ -125,6 +128,7 @@ private:
     Sampler *m_sampler = nullptr;
     Camera *m_camera = nullptr;
     BVH *m_bvh = nullptr;
+   std::vector<Emitter *>m_emitters;
 };
 
 NORI_NAMESPACE_END

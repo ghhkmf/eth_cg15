@@ -23,6 +23,21 @@
 
 NORI_NAMESPACE_BEGIN
 
+
+struct EmittedValues {
+    /// Position of the ref point
+    Point3f p;
+    // Ray from p to light source
+    Ray3f ray;
+    // Radiance at p
+    Color3f Li;
+    // Wi in from p to light source
+    Vector3f wi;
+
+    /// Return a human-readable summary of the intersection record
+    std::string toString() const;
+};
+
 /**
  * \brief Superclass of all emitters
  */
@@ -34,7 +49,10 @@ public:
      * provided by this instance
      * */
     virtual EClassType getClassType() const override { return EEmitter; }
+
+    virtual EmittedValues getEmittedValues(Point3f p)=0;
 };
+
 
 NORI_NAMESPACE_END
 

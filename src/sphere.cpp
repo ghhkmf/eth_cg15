@@ -37,7 +37,6 @@ public:
     virtual Point3f getCentroid(uint32_t index) const override { return m_position; }
 
     virtual bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const override {
-
     	float cod =(m_position-ray.o).dot(ray.d);
 
     	if(cod<0 && (m_position-ray.o).squaredNorm() > m_radius){
@@ -73,11 +72,13 @@ public:
 		Vector3f relVec = (its.p-m_position).normalized();
 
 
-		// UV Coordinates u-arctan2, v-arccos
-		Point2f s_cord = sphericalCoordinates(relVec);
-		s_cord[0]=s_cord[0]/M_PI; 						// 0 Pi - s_cord[0]
-	    s_cord[1]=0.5+s_cord[1]/(M_PI) ;				// -Pi/2 PI/2 - s_cord[1]
-	    its.uv=s_cord;
+		// UV Coordinates SphericalCoordinates
+		Point2f s_cord(
+				std::atan2(relVec.y(), relVec.x()),
+				std::acos(relVec.z())
+		);
+		its.uv[0]=0.5+(s_cord[0])/(2*M_PI); // -Pi PI - s_cord[0]
+		its.uv[1]=s_cord[1]/M_PI; // 0 Pi - s_cord[1]
 
 		// Geometric Frame
 		its.geoFrame = Frame(relVec);

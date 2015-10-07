@@ -1,93 +1,136 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+ This file is part of Nori, a simple educational ray tracer
 
-    Copyright (c) 2015 by Romain Prévost
+ Copyright (c) 2015 by Romain Prévost
 
-    Nori is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License Version 3
-    as published by the Free Software Foundation.
+ Nori is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License Version 3
+ as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
+ Nori is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <nori/object.h>
 #include <nori/texture.h>
 
 NORI_NAMESPACE_BEGIN
 
-template <typename T>
-class Checkerboard : public Texture<T> {
+template<typename T>
+class Checkerboard: public Texture<T> {
 public:
-    Checkerboard(const PropertyList &props);
+	Checkerboard(const PropertyList &props);
 
-    virtual std::string toString() const override;
+	virtual std::string toString() const override;
 
-    virtual T eval(const Point2f & uv) override {
-        /* to be implemented */
-	    return m_value1;
-    }
+	void handleUVOutrange(Point2f uv) {
+		// Dont do anything if outside.
+		// Repeat texture with frequence m_scale to both dimensions
+		cout << "UV Coordinates not in 0-1 : " << uv.toString() << "\n";
+
+	}
+
+	virtual T eval(const Point2f & uv) override {
+
+		if (uv[0] * uv[1] < 0 || uv[0] * uv[1] > 1) {
+			handleUVOutrange(uv);
+		}
+		/*
+		 //Point2f center = Vector2f(0.5f, 0.5f) + m_delta;
+		 //Vector2f diff = uv -center;
+		 Point2f test(m_delta[0]-0.1,m_delta[1]-0.1);
+
+
+
+
+		 //Mirror patch
+		 int c = 0;
+		 if (diff[0] < 0) {
+		 c++;
+		 diff[0] *= -1;
+		 }
+		 if (diff[1] < 0) {
+		 c++;
+		 diff[1] *= -1;
+		 }
+
+		 c = mod(diff[0] / m_scale[0], 2)+c;
+		 c = mod(diff[1] / m_scale[1], 2)+c;
+
+		 if (mod(c,2) == 1)
+		 return m_value2;
+		 else
+		 return m_value1;
+		 */
+		Vector2f diff = uv + m_delta;
+		//Mirror
+		int c = 0;
+		if (diff[0] < 0) {
+			c++;
+			diff[0] *= -1;
+		}
+		if (diff[1] < 0) {
+			c++;
+			diff[1] *= -1;
+		}
+
+		c = mod(((diff[0]) / m_scale[0]), 2);
+		c = mod(((diff[1]) / m_scale[1]) + c, 2);
+
+		if (c == 1)
+			return m_value2;
+		else
+			return m_value1;
+	}
 
 protected:
-    T m_value1;
-    T m_value2;
+	T m_value1;
+	T m_value2;
 
-    Point2f m_delta;
-    Vector2f m_scale;
+	Point2f m_delta;
+	Vector2f m_scale;
 };
 
-template <>
+template<>
 Checkerboard<float>::Checkerboard(const PropertyList &props) {
-    m_delta = props.getPoint2("delta", Point2f(0));
-    m_scale = props.getVector2("scale", Vector2f(1));
-    m_value1 = props.getFloat("value1", 0.f);
-    m_value2 = props.getFloat("value2", 1.f);
+	m_delta = props.getPoint2("delta", Point2f(0));
+	m_scale = props.getVector2("scale", Vector2f(1));
+	m_value1 = props.getFloat("value1", 0.f);
+	m_value2 = props.getFloat("value2", 1.f);
 }
 
-template <>
+template<>
 Checkerboard<Color3f>::Checkerboard(const PropertyList &props) {
-    m_delta = props.getPoint2("delta", Point2f(0));
-    m_scale = props.getVector2("scale", Vector2f(1));
-    m_value1 = props.getColor("value1", Color3f(0));
-    m_value2 = props.getColor("value2", Color3f(1));
+	m_delta = props.getPoint2("delta", Point2f(0));
+	m_scale = props.getVector2("scale", Vector2f(1));
+	m_value1 = props.getColor("value1", Color3f(0));
+	m_value2 = props.getColor("value2", Color3f(1));
 }
 
-
-template <>
+template<>
 std::string Checkerboard<float>::toString() const {
-    return tfm::format(
-        "Checkerboard[\n"
-                "  delta = %s,\n"
-                "  scale = %s,\n"
-                "  value1 = %f,\n"
-                "  value2 = %f,\n"
-                "]",
-        m_delta.toString(),
-        m_scale.toString(),
-        m_value1,
-	    m_value2
-    );
+	return tfm::format("Checkerboard[\n"
+			"  delta = %s,\n"
+			"  scale = %s,\n"
+			"  value1 = %f,\n"
+			"  value2 = %f,\n"
+			"]", m_delta.toString(), m_scale.toString(), m_value1, m_value2);
 }
 
-template <>
+template<>
 std::string Checkerboard<Color3f>::toString() const {
-    return tfm::format(
-        "Checkerboard[\n"
-                "  delta = %s,\n"
-                "  scale = %s,\n"
-                "  tex1 = %s,\n"
-                "  tex2 = %s,\n"
-                "]",
-        m_delta.toString(),
-        m_scale.toString(),
-        m_value1.toString(),
-	    m_value2.toString()
-    );
+	return tfm::format("Checkerboard[\n"
+			"  delta = %s,\n"
+			"  scale = %s,\n"
+			"  tex1 = %s,\n"
+			"  tex2 = %s,\n"
+			"]", m_delta.toString(), m_scale.toString(), m_value1.toString(),
+			m_value2.toString());
 }
 
 NORI_REGISTER_TEMPLATED_CLASS(Checkerboard, float, "checkerboard_float")
