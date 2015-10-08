@@ -28,38 +28,25 @@ public:
 
 	virtual std::string toString() const override;
 
-	Point2f handleUVOutrange(Point2f diff) {
-		// Repeat Texture, Map back to [0...1]x[0...1]
-		float rest;
-		diff[0] = modff(diff[0], &rest);
-		if (diff[0] < 0)
-			diff[0] += 1;
-
-		diff[1]=modff(diff[1],&rest);
-		if (diff[1] < 0)
-			diff[1] += 1;
-
-		return diff;
-	}
-
 	virtual T eval(const Point2f & uv) override {
 
 		// Neg u shifts texture to left
 		// Neg v shifts texture to top
 		// -> - m_delta should to added to uv
-		Point2f diff = uv - m_delta;
+		Point2f diff = Point2f(uv[0]/m_scale[0] + m_delta[0],uv[1]/m_scale[1] + m_delta[1]);
 
-		if (diff[0]<0 || diff[1] < 0 || diff[0]>1  || diff[1] > 1) {
-			diff = handleUVOutrange(diff);
-		}
+		int c = mod(diff[0],2)+mod(diff[1], 2);
 
-		int c = mod(((diff[0]) / m_scale[0]), 2);
-		c = mod(((diff[1]) / m_scale[1]) + c, 2);
+		if(diff[0]<0)
+			c++;
 
-		if (c == 1)
-			return m_value2;
-		else
+		if(diff[1]<0)
+			c++;
+
+		if (mod(c,2) == 0)
 			return m_value1;
+		else
+			return m_value2;
 	}
 
 protected:

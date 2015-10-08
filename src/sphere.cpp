@@ -37,15 +37,19 @@ public:
     virtual Point3f getCentroid(uint32_t index) const override { return m_position; }
 
     virtual bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const override {
+
+
+    	//Analytical solution for intersection with Sphere
     	float cod =(m_position-ray.o).dot(ray.d);
 
+    	// ray.d in opposite direction as Sphere AND not IN sphere
     	if(cod<0 && (m_position-ray.o).squaredNorm() > m_radius){
-    		// ray.d in other direction as Sphere and not IN sphere
     		return false;
     	}
 
     	float D_2 = (m_position-ray.o).squaredNorm() - (cod*cod) ;
 
+    	//Compare distances.
     	if (D_2 > m_radius*m_radius){
     		// No  intersection. Ray passes by
     		return false;
@@ -53,9 +57,11 @@ public:
 
     	float t_cand = cod - sqrt(m_radius*m_radius-D_2);
 
+    	//Set candidate regardless of boundaries
     	t=t_cand;
-    	if(t_cand >= ray.mint && t_cand <= ray.maxt){
 
+    	//Return if in boundaries
+    	if(t_cand >= ray.mint && t_cand <= ray.maxt){
     		return true;
     	}
 
