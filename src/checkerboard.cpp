@@ -28,58 +28,32 @@ public:
 
 	virtual std::string toString() const override;
 
-	void handleUVOutrange(Point2f uv) {
-		// Dont do anything if outside.
-		// Repeat texture with frequence m_scale to both dimensions
-		cout << "UV Coordinates not in 0-1 : " << uv.toString() << "\n";
+	Point2f handleUVOutrange(Point2f diff) {
+		// Repeat Texture, Map back to [0...1]x[0...1]
+		float rest;
+		diff[0] = modff(diff[0], &rest);
+		if (diff[0] < 0)
+			diff[0] += 1;
 
+		diff[1]=modff(diff[1],&rest);
+		if (diff[1] < 0)
+			diff[1] += 1;
+
+		return diff;
 	}
 
 	virtual T eval(const Point2f & uv) override {
 
-		if (uv[0] * uv[1] < 0 || uv[0] * uv[1] > 1) {
-			handleUVOutrange(uv);
-		}
-		/*
-		 //Point2f center = Vector2f(0.5f, 0.5f) + m_delta;
-		 //Vector2f diff = uv -center;
-		 Point2f test(m_delta[0]-0.1,m_delta[1]-0.1);
+		// Neg u shifts texture to left
+		// Neg v shifts texture to top
+		// -> - m_delta should to added to uv
+		Point2f diff = uv - m_delta;
 
-
-
-
-		 //Mirror patch
-		 int c = 0;
-		 if (diff[0] < 0) {
-		 c++;
-		 diff[0] *= -1;
-		 }
-		 if (diff[1] < 0) {
-		 c++;
-		 diff[1] *= -1;
-		 }
-
-		 c = mod(diff[0] / m_scale[0], 2)+c;
-		 c = mod(diff[1] / m_scale[1], 2)+c;
-
-		 if (mod(c,2) == 1)
-		 return m_value2;
-		 else
-		 return m_value1;
-		 */
-		Vector2f diff = uv + m_delta;
-		//Mirror
-		int c = 0;
-		if (diff[0] < 0) {
-			c++;
-			diff[0] *= -1;
-		}
-		if (diff[1] < 0) {
-			c++;
-			diff[1] *= -1;
+		if (diff[0]<0 || diff[1] < 0 || diff[0]>1  || diff[1] > 1) {
+			diff = handleUVOutrange(diff);
 		}
 
-		c = mod(((diff[0]) / m_scale[0]), 2);
+		int c = mod(((diff[0]) / m_scale[0]), 2);
 		c = mod(((diff[1]) / m_scale[1]) + c, 2);
 
 		if (c == 1)
