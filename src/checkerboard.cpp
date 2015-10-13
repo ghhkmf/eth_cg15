@@ -30,9 +30,6 @@ public:
 
 	virtual T eval(const Point2f & uv) override {
 
-		// Neg u shifts texture to left
-		// Neg v shifts texture to top
-		// -> - m_delta should to added to uv
 		Point2f diff = Point2f(uv[0]/m_scale[0] + m_delta[0],uv[1]/m_scale[1] + m_delta[1]);
 
 		int c = mod(diff[0],2)+mod(diff[1], 2);

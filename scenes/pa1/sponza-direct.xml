@@ -23,12 +23,11 @@
 		<integer name="height" value="600"/>
 	</camera>
 
-	<!-- Illuminate using a point light -->
+	<!-- Illuminate using a point light --> 
 	<emitter type="point">
 		<point name="position" value = "-8,5,0"/>
 		<color name="power" value="500,250,250"/>
 	</emitter>
-
 	<mesh type="obj">
 		<string name="filename" value="sponza.obj"/>
 
