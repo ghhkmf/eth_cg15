@@ -6,6 +6,8 @@ project("nori")
 # and setting compiler flags on different platforms
 include("CMakeConfig.txt")
 
+include_directories(ext)
+
 # The following lines build the main executable. If you add a source
 # code file to Nori, be sure to include it in this list.
 add_executable(nori
@@ -72,6 +74,7 @@ add_executable(nori
   src/dielectric.cpp
   src/photonmapper.cpp
   src/sphere.cpp
+  src/arealight.cpp
 )
 
 # The following lines build the warping test application
@@ -85,6 +88,12 @@ add_executable(warptest
   src/common.cpp
 )
 
+add_executable(tonemapper
+        include/nori/bitmap.h
+        src/bitmap.cpp
+        src/common.cpp
+        src/hdrToLdr.cpp)
+
 # Nori depends on some libraries created in CMakeConfig.txt. The following two
 # lines ensure that Nori is built *after* those libraries have been created.
 add_dependencies(nori OpenEXR_p)
@@ -92,9 +101,11 @@ add_dependencies(nori nanogui_p)
 add_dependencies(nori tbb_p)
 add_dependencies(nori pugixml)
 add_dependencies(warptest nori)
+add_dependencies(tonemapper OpenEXR_p)
 
 # Link to dependency libraries
 target_link_libraries(nori ${extra_libs})
 target_link_libraries(warptest ${extra_libs})
+target_link_libraries(tonemapper ${extra_libs})
 
 # vim: set et ts=2 sw=2 ft=cmake nospell:

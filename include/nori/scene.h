@@ -20,6 +20,7 @@
 #define __NORI_SCENE_H
 
 #include <nori/bvh.h>
+#include <nori/emitter.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -58,6 +59,18 @@ public:
 
     /// Return a reference to an array containing all shapes
     const std::vector<Shape *> &getShapes() const { return m_shapes; }
+
+    /// Return a reference to an array containing all lights
+    const std::vector<Emitter *> &getLights() const { return m_emitters; }
+
+    /// Return a random emitter
+    const Emitter * getRandomEmitter(float rnd) const {
+        auto const & n = m_emitters.size();
+        size_t index = std::min(
+                static_cast<size_t>(std::floor(n*rnd)),
+                n-1);
+        return m_emitters[index];
+    }
 
     /**
      * \brief Intersect a ray against all triangles stored in the scene
@@ -125,6 +138,8 @@ private:
     Sampler *m_sampler = nullptr;
     Camera *m_camera = nullptr;
     BVH *m_bvh = nullptr;
+
+    std::vector<Emitter *> m_emitters;
 };
 
 NORI_NAMESPACE_END

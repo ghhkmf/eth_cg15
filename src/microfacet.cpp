@@ -48,6 +48,38 @@ public:
         m_ks = 1 - m_kd.maxCoeff();
     }
 
+    /// Evaluate the microfacet normal distribution D
+    float evalBeckmann(const Normal3f &m) const {
+        float temp = Frame::tanTheta(m) / m_alpha,
+              ct = Frame::cosTheta(m), ct2 = ct*ct;
+
+        return std::exp(-temp*temp) 
+            / (M_PI * m_alpha * m_alpha * ct2 * ct2);
+    }
+
+    /// Evaluate Smith's shadowing-masking function G1 
+    float smithBeckmannG1(const Vector3f &v, const Normal3f &m) const {
+        float tanTheta = Frame::tanTheta(v);
+
+        /* Perpendicular incidence -- no shadowing/masking */
+        if (tanTheta == 0.0f)
+            return 1.0f;
+
+        /* Can't see the back side from the front and vice versa */
+        if (m.dot(v) * Frame::cosTheta(v) <= 0)
+            return 0.0f;
+
+        float a = 1.0f / (m_alpha * tanTheta);
+        if (a >= 1.6f)
+            return 1.0f;
+        float a2 = a * a;
+
+        /* Use a fast and accurate (<0.35% rel. error) rational
+           approximation to the shadowing-masking function */
+        return (3.535f * a + 2.181f * a2) 
+             / (1.0f + 2.276f * a + 2.577f * a2);
+    }
+
     /// Evaluate the BRDF for the given pair of directions
     virtual Color3f eval(const BSDFQueryRecord &bRec) const override {
     	throw NoriException("MicrofacetBRDF::eval(): not implemented!");
