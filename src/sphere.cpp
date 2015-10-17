@@ -19,6 +19,7 @@
 #include <nori/shape.h>
 #include <nori/bsdf.h>
 #include <nori/emitter.h>
+#include <nori/warp.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -79,4 +80,3 @@ protected:
 
 NORI_REGISTER_CLASS(Sphere, "sphere");
 NORI_NAMESPACE_END
-
