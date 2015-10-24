@@ -129,4 +129,10 @@ Point3f Warp::squareToUniformCylinder(const Point2f &sample) {
 }
 
 
+Vector3f Warp::squareToUniformTriangle(const Point2f &sample) {
+    float su1 = sqrtf(sample.x());
+    float u = 1.f - su1, v = sample.y() * su1;
+    return Vector3f(u,v,1.f-u-v);
+}
+
 NORI_NAMESPACE_END

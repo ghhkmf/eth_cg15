@@ -81,12 +81,16 @@ public:
 
     /**
      * \brief Uniformly sample a position on the mesh with
-     * respect to surface area. Returns both position and normal
+     * respect to surface area.
      */
-    void samplePosition(const Point2f &sample, Point3f &p, Normal3f &n) const;
+    virtual void sampleSurface(ShapeQueryRecord & sRec, const Point2f & sample) const override;
+    virtual float pdfSurface(const ShapeQueryRecord & sRec) const override;
 
     /// Return the surface area of the given triangle
     float surfaceArea(uint32_t index) const;
+
+    Point3f getInterpolatedVertex(uint32_t index, const Vector3f & bc) const;
+    Normal3f getInterpolatedNormal(uint32_t index, const Vector3f & bc) const;
 
     /// Return a pointer to the vertex positions
     const MatrixXf &getVertexPositions() const { return m_V; }
@@ -118,6 +122,7 @@ protected:
     MatrixXf      m_UV;                  ///< Vertex texture coordinates
     MatrixXu      m_F;                   ///< Faces
 
+    DiscretePDF m_pdf;
 };
 
 NORI_NAMESPACE_END

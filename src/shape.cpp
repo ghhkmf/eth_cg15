@@ -26,7 +26,7 @@ NORI_NAMESPACE_BEGIN
 
 Shape::~Shape() {
     delete m_bsdf;
-    delete m_emitter;
+    //delete m_emitter; // scene is responsible for deleting the emitter
 }
 
 void Shape::activate() {
@@ -52,6 +52,7 @@ void Shape::addChild(NoriObject *obj) {
                 throw NoriException(
                     "Shape: tried to register multiple Emitter instances!");
             m_emitter = static_cast<Emitter *>(obj);
+            m_emitter->setShape(static_cast<Shape*>(this));
             break;
 
         default:

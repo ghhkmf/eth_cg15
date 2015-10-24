@@ -79,6 +79,9 @@ public:
     static float squareToBeckmannPdf(const Vector3f &m, float alpha);
 
     static Point3f squareToUniformCylinder(const Point2f &sample);
+
+    static Vector3f squareToUniformTriangle(const Point2f &sample);
+
 };
 
 NORI_NAMESPACE_END

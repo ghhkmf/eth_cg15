@@ -19,6 +19,7 @@
 #include <nori/shape.h>
 #include <nori/bsdf.h>
 #include <nori/emitter.h>
+#include <nori/warp.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -92,6 +93,16 @@ public:
 
     }
 
+    virtual void sampleSurface(ShapeQueryRecord & sRec, const Point2f & sample) const override {
+        Vector3f q = Warp::squareToUniformSphere(sample);
+        sRec.p = m_position + m_radius * q;
+        sRec.n = q;
+        sRec.pdf = std::pow(1.f/m_radius,2) * Warp::squareToUniformSpherePdf(Vector3f(0));
+    }
+    virtual float pdfSurface(const ShapeQueryRecord & sRec) const override {
+        return std::pow(1.f/m_radius,2) * Warp::squareToUniformSpherePdf(Vector3f(0));
+    }
+
 
     virtual std::string toString() const override {
         return tfm::format(
@@ -114,4 +125,3 @@ protected:
 
 NORI_REGISTER_CLASS(Sphere, "sphere");
 NORI_NAMESPACE_END
-

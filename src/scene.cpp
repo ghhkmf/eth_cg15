@@ -34,6 +34,9 @@ Scene::~Scene() {
     delete m_sampler;
     delete m_camera;
     delete m_integrator;
+    for(auto e : m_emitters)
+        delete e;
+    m_emitters.clear();
 }
 
 void Scene::activate() {
@@ -62,15 +65,12 @@ void Scene::addChild(NoriObject *obj) {
                 Shape *mesh = static_cast<Shape *>(obj);
                 m_bvh->addShape(mesh);
                 m_shapes.push_back(mesh);
+                if(mesh->isEmitter())
+                    m_emitters.push_back(mesh->getEmitter());
             }
             break;
-        
-        case EEmitter: {
-              Emitter *emitter = static_cast<Emitter *>(obj);
-                /* TBD */
-                //throw NoriException("Scene::addChild(): You need to implement this for emitters");
-              m_emitters.push_back(emitter);
-            }
+        case EEmitter:
+            m_emitters.push_back(static_cast<Emitter *>(obj));
             break;
 
         case ESampler:
@@ -105,15 +105,14 @@ std::string Scene::toString() const {
             shapes += ",";
         shapes += "\n";
     }
-    std::string emitters;
 
+    std::string lights;
     for (size_t i=0; i<m_emitters.size(); ++i) {
-    	emitters += std::string("  ") + indent(m_emitters[i]->toString(), 2);
-            if (i + 1 < m_emitters.size())
-                emitters += ",";
-            emitters += "\n";
-        }
-
+        lights += std::string("  ") + indent(m_emitters[i]->toString(), 2);
+        if (i + 1 < m_emitters.size())
+            lights += ",";
+        lights += "\n";
+    }
 
     return tfm::format(
         "Scene[\n"
@@ -122,14 +121,14 @@ std::string Scene::toString() const {
         "  camera = %s,\n"
         "  shapes = {\n"
         "  %s  }\n"
-    	"  emitters = {\n"
-    	"  %s  }\n"
+        "  emitters = {\n"
+        "  %s  }\n"
         "]",
         indent(m_integrator->toString()),
         indent(m_sampler->toString()),
         indent(m_camera->toString()),
         indent(shapes, 2),
-		indent(emitters,2)
+        indent(lights,2)
     );
 }
 

@@ -24,6 +24,10 @@
 #include <ImfVersion.h>
 #include <ImfIO.h>
 
+#include <memory>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+
 NORI_NAMESPACE_BEGIN
 
 Bitmap::Bitmap(const std::string &filename) {
@@ -100,6 +104,38 @@ void Bitmap::save(const std::string &filename) {
     Imf::OutputFile file(filename.c_str(), header);
     file.setFrameBuffer(frameBuffer);
     file.writePixels((int) rows());
+}
+
+static float GammaCorrect(float value) {
+    if (value <= 0.0031308f) return 12.92f * value;
+    return 1.055f * std::pow(value, 1.f/2.4f) - 0.055f;
+}
+static float Clamp(float val, float low, float high) {
+    if (val < low)
+        return low;
+    else if (val > high)
+        return high;
+    else
+        return val;
+}
+
+void Bitmap::saveToLDR(const std::string &filename) {
+    cout << "Writing a " << cols() << "x" << rows()
+    << " PNG file to \"" << filename << "\"" << endl;
+
+    std::unique_ptr<uint8_t[]> rgb8(new uint8_t[3 * cols() * rows()]);
+    uint8_t *dst = rgb8.get();
+    for (int y = 0; y < rows(); ++y) {
+        for (int x = 0; x < cols(); ++x) {
+#define TO_BYTE(v) (uint8_t) Clamp(255.f * GammaCorrect(v) + 0.5f, 0.f, 255.f)
+            dst[0] = TO_BYTE(coeff(y,x).r());
+            dst[1] = TO_BYTE(coeff(y,x).g());
+            dst[2] = TO_BYTE(coeff(y,x).b());
+#undef TO_BYTE
+            dst += 3;
+        }
+    }
+    stbi_write_png(filename.c_str(),cols(),rows(),3,rgb8.get(),3*cols());
 }
 
 NORI_NAMESPACE_END

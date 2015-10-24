@@ -24,6 +24,16 @@ public:
     	return Ray3f(m_position,(p-m_position).normalized(),Epsilon,(p-m_position).norm()-Epsilon);
     }
 
+    Color3f sample(EmitterQueryRecord &lRec, const Point2f &sample)const{
+    	return Color3f(0.f); //TODO
+    }
+    Color3f eval(const EmitterQueryRecord &lRec) const{
+    	return Color3f(0.f);//TODO
+    }
+    float pdf(const EmitterQueryRecord &lRec) const{
+    	return 0.f;//TODO
+    }
+
     EmittedValues getEmittedValues(Point3f p){
     	EmittedValues val;
     	val.p=p;
