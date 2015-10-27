@@ -82,6 +82,8 @@ public:
 
     static Vector3f squareToUniformTriangle(const Point2f &sample);
 
+    static MatrixXf getRotationMatrix(const Vector3f a, const Vector3f b);
+
 };
 
 NORI_NAMESPACE_END

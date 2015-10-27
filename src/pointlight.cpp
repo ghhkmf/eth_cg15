@@ -25,12 +25,15 @@ public:
     }
 
     Color3f sample(EmitterQueryRecord &lRec, const Point2f &sample)const{
+    	throw NoriException("To implement...");
     	return Color3f(0.f); //TODO
     }
     Color3f eval(const EmitterQueryRecord &lRec) const{
-    	return Color3f(0.f);//TODO
+    	throw NoriException("To implement...");
+    	return getRadiance(lRec.ref);//TODO
     }
     float pdf(const EmitterQueryRecord &lRec) const{
+    	throw NoriException("To implement...");
     	return 0.f;//TODO
     }
 

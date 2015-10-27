@@ -16,6 +16,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+#include <nori/common.h>
 #include <nori/shape.h>
 #include <nori/bsdf.h>
 #include <nori/emitter.h>
@@ -94,13 +96,52 @@ public:
     }
 
     virtual void sampleSurface(ShapeQueryRecord & sRec, const Point2f & sample) const override {
-        Vector3f q = Warp::squareToUniformSphere(sample);
+
+
+    	//Cosine weighted
+
+    	Vector3f q = Warp::squareToCosineHemisphere(sample);
+    	Vector3f pole = (sRec.ref-m_position).normalized();
+    	MatrixXf rot = Warp::getRotationMatrix(Vector3f(0.f,0.f,1.f),pole);
+
+    	sRec.p=rot*q*m_radius+m_position;
+    	sRec.n=(rot*q).normalized();
+    	sRec.pdf=std::pow(1.f/m_radius,2) * Warp::squareToCosineHemispherePdf(q);
+
+
+    	//Uniform Hemisphere
+    	/*
+    	Vector3f q = Warp::squareToUniformSphere(sample);
+        Vector3f pole = (sRec.ref-m_position).normalized();
+        if (q.dot(pole) < 0.f)
+            q = -q;
+
         sRec.p = m_position + m_radius * q;
         sRec.n = q;
-        sRec.pdf = std::pow(1.f/m_radius,2) * Warp::squareToUniformSpherePdf(Vector3f(0));
+        sRec.pdf = std::pow(1.f/m_radius,2) * Warp::squareToUniformHemispherePdf(Vector3f(0.f,0.f,1.f));
+        */
+
+    	/* Old variante
+         Vector3f q = Warp::squareToUniformSphere(sample);
+         sRec.p = m_position + m_radius * q;
+         sRec.n = q;
+         sRec.pdf = std::pow(1.f/m_radius,2) * Warp::squareToUniformSpherePdf(Vector3f(0));
+         */
     }
+
     virtual float pdfSurface(const ShapeQueryRecord & sRec) const override {
-        return std::pow(1.f/m_radius,2) * Warp::squareToUniformSpherePdf(Vector3f(0));
+
+    	Vector3f pole = (sRec.ref-m_position).normalized();
+    	MatrixXf rot = Warp::getRotationMatrix(pole,Vector3f(0.f,0.f,1.f));
+
+    	return std::pow(1.f/m_radius,2) * Warp::squareToCosineHemispherePdf(rot*(sRec.p-m_position)/m_radius);
+
+
+    	return std::pow(1.f/m_radius,2) * Warp::squareToUniformHemispherePdf(Vector3f(0.f,0.f,1.f));
+
+    	//return std::pow(1.f/m_radius,2) * Warp::squareToUniformSpherePdf(Vector3f(0));
+
+
     }
 
 

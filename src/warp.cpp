@@ -19,6 +19,8 @@
 #include <nori/warp.h>
 #include <nori/vector.h>
 #include <nori/frame.h>
+#include <Eigen/Geometry>
+
 
 NORI_NAMESPACE_BEGIN
 
@@ -134,5 +136,36 @@ Vector3f Warp::squareToUniformTriangle(const Point2f &sample) {
     float u = 1.f - su1, v = sample.y() * su1;
     return Vector3f(u,v,1.f-u-v);
 }
+
+/*
+ * Gets the roation matrix s.t. a is aligned to b
+ */
+
+MatrixXf Warp::getRotationMatrix(const Vector3f a, const Vector3f b){
+	MatrixXf m;
+	m.setIdentity(3, 3);
+	if(a==b){
+		return	m;
+	}
+	Vector3f v = (Vector3f)a.cross(b);
+	float sin = v.norm();
+	float cos = a.dot(b);
+	MatrixXf vx(3,3);
+	vx(0,0)=0;
+	vx(0,1)=-v.z();
+	vx(0,2)=v.y();
+	vx(1,0)=v.z();
+	vx(1,1)=0;
+	vx(1,2)=-v.x();
+	vx(2,0)=-v.y();
+	vx(2,1)=v.x();
+	vx(2,2)=0;
+
+
+	//Fill the matrix
+	return m+vx+vx*vx*(1-cos)/(sin*sin);
+}
+
+
 
 NORI_NAMESPACE_END

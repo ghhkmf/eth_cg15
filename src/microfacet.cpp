@@ -1,5 +1,5 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+9    This file is part of Nori, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
@@ -82,7 +82,25 @@ public:
 
     /// Evaluate the BRDF for the given pair of directions
     virtual Color3f eval(const BSDFQueryRecord &bRec) const override {
+    	float kd = m_kd;
+    	float ks=m_ks;
+    	Vector3f wi=bRec.wi;
+    	Vector3f wo=bRec.wo;
+    	Normal3f wh= (bRec.wi+bRec.wo)/(bRec.wi+bRec.wo).norm();
+    	float Dh = evalBeckmann(wh);
+    	float F = fresnel(wh.dot(wi),m_extIOR,m_intIOR);
+    	G = smithBeckmannG1(wi,wh)*smithBeckmannG1(wo,wh);
+
+
+
+
+
+
+
     	throw NoriException("MicrofacetBRDF::eval(): not implemented!");
+
+
+
     }
 
     /// Evaluate the sampling density of \ref sample() wrt. solid angles

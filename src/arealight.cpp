@@ -40,25 +40,46 @@ public:
         if(!m_shape)
             throw NoriException("There is no shape attached to this Area light!");
 
-        throw NoriException("To implement...");
+
+        float cos_theta_i = lRec.n.dot(-lRec.wi);
+
+        if((cos_theta_i)>=0){
+        	return m_radiance*cos_theta_i/((lRec.p - lRec.ref).squaredNorm());
+        }else{
+        	return Color3f(0.f);
+        }
     }
 
     virtual Color3f sample(EmitterQueryRecord & lRec, const Point2f & sample) const override {
         if(!m_shape)
             throw NoriException("There is no shape attached to this Area light!");
 
-        throw NoriException("To implement...");
+        ShapeQueryRecord sRec(lRec.ref);
+        m_shape->sampleSurface(sRec,sample);
+        lRec.p=sRec.p;
+        lRec.pdf=sRec.pdf;
+        lRec.n=sRec.n;
+        lRec.wi=(lRec.p-lRec.ref).normalized();
+
+        Ray3f shadowRay(lRec.ref, lRec.wi, Epsilon, (lRec.p - lRec.ref).norm()-Epsilon);
+        lRec.shadowRay = shadowRay;
+
+        return eval(lRec)/pdf(lRec);
     }
 
     virtual float pdf(const EmitterQueryRecord &lRec) const override {
         if(!m_shape)
             throw NoriException("There is no shape attached to this Area light!");
 
-        throw NoriException("To implement...");
+       ShapeQueryRecord sRec(lRec.ref,lRec.p);
+       sRec.pdf=m_shape->pdfSurface(sRec);
+       return sRec.pdf;
+
     }
 
     EmittedValues getEmittedValues(Point3f p){
-    	//WRONG
+        throw NoriException("Methods should not be called");
+
         	EmittedValues val;
         	val.p=p;
         	return val;
