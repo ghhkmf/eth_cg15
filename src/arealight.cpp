@@ -44,7 +44,7 @@ public:
         float cos_theta_i = lRec.n.dot(-lRec.wi);
 
         if((cos_theta_i)>=0){
-        	return m_radiance*cos_theta_i/((lRec.p - lRec.ref).squaredNorm());
+        	return m_radiance;//*cos_theta_i/((lRec.p - lRec.ref).squaredNorm());
         }else{
         	return Color3f(0.f);
         }

@@ -22,44 +22,99 @@ public:
 
 		const std::vector<Emitter *> emis = scene->getEmitters();
 
-		Color3f result = Color3f(0.0f);
+		Color3f Le = Color3f(0.0f);
+
+		const Emitter* emi2 = its.mesh->getEmitter();
+		if (emi2) {
+			// Get Le
+			EmitterQueryRecord iRec2(its.p);
+			Le = emi2->eval(iRec2);
+		}
+
+		//Emitter part
+		Color3f F_em = Color3f(0.0f);
+
+		EmitterQueryRecord iRec = EmitterQueryRecord(its.p);
 
 		for (std::vector<Emitter*>::const_iterator it = emis.begin();
 				it != emis.end(); ++it) {
 
 			Emitter* emi = *it;
-			EmitterQueryRecord iRec = EmitterQueryRecord(its.p);
 
-			//Get BSDF
-			//For Emitter and sample
-			//Get point Le if exists
-			const Emitter* emi2 = its.mesh->getEmitter();
-			if (emi2) {
-				// Get Le
-				EmitterQueryRecord iRec2 = EmitterQueryRecord(its.p, its.p,
-						its.geoFrame.n);
-				result = result
-						+ its.mesh->getEmitter()->sample(iRec2,
-								Point2f(sampler->next2D()));
-			}
-
-			Color3f Lo = emi->sample(iRec, sampler->next2D());
+			//Sample Emitter
+			Color3f Lo_em = emi->sample(iRec, sampler->next2D()); //Div by pdf
 
 			//Get BSDF
 			const BSDF* bsdf = its.mesh->getBSDF();
-
 			BSDFQueryRecord query = BSDFQueryRecord(its.toLocal(iRec.wi),
 					its.toLocal(-ray.d), ESolidAngle);
 			query.uv = its.uv;
-			Color3f bsdfVal = bsdf->eval(query);
+			Color3f bsdfVal_em = bsdf->eval(query);
 
-			result = result + Lo + bsdfVal / emi->pdf(iRec);
+			//Check if something blocks the visibility
+			if (!scene->rayIntersect(iRec.shadowRay)) {
+				//Multiply by cos of normal of reflec. normal
+				float cos_i = iRec.n.dot(-iRec.wi);
+				if (cos_i < 0)
+					cos_i = -cos_i;
+
+				float cos0 = its.geoFrame.n.dot(iRec.wi);
+				if (cos0 < 0)
+					cos0 = -cos0;
+
+				F_em = F_em
+						+ Lo_em * bsdfVal_em * cos0 * cos_i
+								/ (its.p - iRec.p).squaredNorm();
+			}
 		}
-		return result;
+
+		// BRDF part------------------------------------
+		Color3f F_mat = Color3f(0.0f);
+
+		const BSDF* bsdf = its.mesh->getBSDF();
+		Vector3f toCam = -ray.d.normalized();
+
+		BSDFQueryRecord query(its.toLocal(toCam)); //wi Camera, wo sampled ray
+		query.p = its.p;
+		Color3f bsdfVal_b = bsdf->sample(query, sampler->next2D()); //Has cos already in
+
+		float mat_pdf = bsdf->pdf(query);
+		//Check if intersect with emitter
+		Ray3f lightRay(its.p, its.toWorld(query.wo));
+
+		Intersection its2;
+		if (scene->rayIntersect(lightRay, its2)) {
+
+			if (its2.mesh->getEmitter()) {
+				//It intersects with light source
+				const Emitter* emi = its2.mesh->getEmitter();
+				EmitterQueryRecord iRec = EmitterQueryRecord(its2.p);
+				Color3f Lo_b = emi->eval(iRec);
+
+				F_mat = Lo_b * bsdfVal_b;
+			}
+		}
+
+		//Same units
+		float cos_i = Frame::cosTheta(query.wi);
+		if (cos_i < 0)
+			cos_i = -cos_i;
+
+		float cos0 = Frame::cosTheta(query.wo);
+		if (cos0 < 0)
+			cos0 = -cos0;
+
+		float ems_pdf = iRec.pdf;
+		mat_pdf=mat_pdf*cos0*cos_i/(its.p - its2.p).squaredNorm();
+
+		float w_em = ems_pdf / (ems_pdf + mat_pdf);
+		float w_mat = mat_pdf / (ems_pdf + mat_pdf);
+
+		return Le + w_em * F_em + w_mat * F_mat;
 	}
 
 	std::string toString() const {
-		return "DirectEMSIntegrator[]";
+		return "DirectMISIntegrator[]";
 	}
 }
 ;

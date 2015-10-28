@@ -137,9 +137,9 @@ public:
     	return std::pow(1.f/m_radius,2) * Warp::squareToCosineHemispherePdf(rot*(sRec.p-m_position)/m_radius);
 
 
-    	return std::pow(1.f/m_radius,2) * Warp::squareToUniformHemispherePdf(Vector3f(0.f,0.f,1.f));
+    //	return std::pow(1.f/m_radius,2) * Warp::squareToUniformHemispherePdf(Vector3f(0.f,0.f,1.f));
 
-    	//return std::pow(1.f/m_radius,2) * Warp::squareToUniformSpherePdf(Vector3f(0));
+    //	return std::pow(1.f/m_radius,2) * Warp::squareToUniformSpherePdf(Vector3f(0));
 
 
     }

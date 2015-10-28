@@ -2,64 +2,62 @@
 
 NORI_NAMESPACE_BEGIN
 
-class PointLight : public Emitter {
+class PointLight: public Emitter {
 public:
-    PointLight(const PropertyList &propList) {
-        /* No parameters this time */
-    	 m_position = propList.getPoint3("position", Point3f());
-    	 m_power = propList.getColor("power", 1.f);
-    }
+	PointLight(const PropertyList &propList) {
+		/* No parameters this time */
+		m_position = propList.getPoint3("position", Point3f());
+		m_power = propList.getColor("power", 1.f);
+	}
 
+	Color3f getRadiance(Point3f p) {
+		float dist = (p - m_position).norm();
+		return m_power / (4 * M_PI * dist * dist);
+	}
+	;
 
-    Color3f getRadiance(Point3f p){
-    	float dist = (p-m_position).norm();
-    	return m_power/(4*M_PI*dist*dist);
-    };
+	Vector3f getWi(Point3f o) {
+		return (m_position - o).normalized();
+	}
+	;
 
-    Vector3f getWi(Point3f o){
-    	return (m_position-o).normalized();
-    };
+	Ray3f getRayToPoint(Point3f p) {
+		return Ray3f(m_position, (p - m_position).normalized(), Epsilon,
+				(p - m_position).norm() - Epsilon);
+	}
 
-    Ray3f getRayToPoint(Point3f p){
-    	return Ray3f(m_position,(p-m_position).normalized(),Epsilon,(p-m_position).norm()-Epsilon);
-    }
+	Color3f sample(EmitterQueryRecord &lRec, const Point2f &sample) const {
+		throw NoriException("To implement...");
+		return Color3f(0.f); //TODO
+	}
+	Color3f eval(const EmitterQueryRecord &lRec) const {
+		float dist = (lRec.ref - m_position).norm();
+		return m_power / (4 * M_PI * dist * dist);
+	}
+	float pdf(const EmitterQueryRecord &lRec) const {
+		throw NoriException("To implement...");
+		return 0.f; //TODO
+	}
 
-    Color3f sample(EmitterQueryRecord &lRec, const Point2f &sample)const{
-    	throw NoriException("To implement...");
-    	return Color3f(0.f); //TODO
-    }
-    Color3f eval(const EmitterQueryRecord &lRec) const{
-    	throw NoriException("To implement...");
-    	return getRadiance(lRec.ref);//TODO
-    }
-    float pdf(const EmitterQueryRecord &lRec) const{
-    	throw NoriException("To implement...");
-    	return 0.f;//TODO
-    }
+	EmittedValues getEmittedValues(Point3f p) {
+		EmittedValues val;
+		val.p = p;
+		val.Li = getRadiance(p);
+		val.ray = getRayToPoint(p);
+		val.wi = getWi(p);
+		return val;
+	}
 
-    EmittedValues getEmittedValues(Point3f p){
-    	EmittedValues val;
-    	val.p=p;
-    	val.Li=getRadiance(p);
-    	val.ray=getRayToPoint(p);
-    	val.wi=getWi(p);
-    	return val;
-    }
-
-
-    std::string toString() const {
-        return tfm::format(
-                "PointLight[ \n"
-        		" Position = \"%s\" \n"
-                " Power = \"%s\" \n"
-                " ] ",
-                m_position.toString(),
-				m_power.toString());
-        }
+	std::string toString() const {
+		return tfm::format("PointLight[ \n"
+				" Position = \"%s\" \n"
+				" Power = \"%s\" \n"
+				" ] ", m_position.toString(), m_power.toString());
+	}
 
 protected:
-    Point3f m_position;
-    Color3f m_power;
+	Point3f m_position;
+	Color3f m_power;
 };
 
 NORI_REGISTER_CLASS(PointLight, "point");

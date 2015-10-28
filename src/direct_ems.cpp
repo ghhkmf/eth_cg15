@@ -36,10 +36,7 @@ public:
 			const Emitter* emi2 = its.mesh->getEmitter();
 			if (emi2) {
 				// Get Le
-				EmitterQueryRecord iRec2 = EmitterQueryRecord(its.p);
-				iRec2.wi = -its.geoFrame.n;
-				iRec2.n=its.geoFrame.n;
-				iRec2.p=its.p+iRec2.n; // damit r = 1
+				EmitterQueryRecord iRec2(its.p);
 				result = result + emi2->eval(iRec2);
 			}
 
@@ -54,12 +51,19 @@ public:
 			Color3f bsdfVal = bsdf->eval(query);
 
 			//Check if something blocks the visibility
-			if(!scene->rayIntersect(iRec.shadowRay)){
+			if (!scene->rayIntersect(iRec.shadowRay)) {
 				//Multiply by cos of normal of reflec. normal
-				float cos0=its.geoFrame.n.dot(iRec.wi);
-				if(cos0<0)
-					cos0=-cos0;
-				result = result + Lo* bsdfVal*cos0;
+				float cos_i = iRec.n.dot(-iRec.wi);
+				if (cos_i < 0)
+					cos_i = -cos_i;
+
+				float cos0 = its.geoFrame.n.dot(iRec.wi);
+				if (cos0 < 0)
+					cos0 = -cos0;
+
+				result = result
+						+ Lo * bsdfVal * cos0 * cos_i
+								/ (its.p - iRec.p).squaredNorm();
 			}
 		}
 		return result;
