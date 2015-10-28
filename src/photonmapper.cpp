@@ -37,6 +37,9 @@ public:
     }
 
     virtual void preprocess(const Scene *scene) override {
+        cout << "Gathering " << m_photonCount << " photons .. ";
+        cout.flush();
+
         /* Create a sample generator for the preprocess step */
         Sampler *sampler = static_cast<Sampler *>(
             NoriObjectFactory::createInstance("independent", PropertyList()));
@@ -45,35 +48,48 @@ public:
         m_photonMap = std::unique_ptr<PhotonMap>(new PhotonMap());
         m_photonMap->reserve(m_photonCount);
 
-		/* Estimate a default photon radius */
-		if (m_photonRadius == 0)
-			m_photonRadius = scene->getBoundingBox().getExtents().norm() / 500.0f;
+	/* Estimate a default photon radius */
+	if (m_photonRadius == 0)
+	    m_photonRadius = scene->getBoundingBox().getExtents().norm() / 500.0f;
 
-		/* Dummy gathering step: just add a single photon */
-		m_photonMap->push_back(Photon(
-			Point3f(0, 0, 0)  /* Position */,
-			Vector3f(0, 0, 1) /* Direction */,
-			Color3f(1, 2, 3)  /* Power */
-		));
+	
 
-		/* Build the photon map */
+        /* How to add a photon?
+	 * m_photonMap->push_back(Photon(
+	 *	Point3f(0, 0, 0),  // Position
+	 *	Vector3f(0, 0, 1), // Direction
+	 *	Color3f(1, 2, 3)   // Power
+	 * ));
+	 */
+
+	// put your code to trace photons here
+
+
+
+
+	/* Build the photon map */
         m_photonMap->build();
-
-		/* Now let's do a lookup to see if it worked */
-		std::vector<uint32_t> results;
-		m_photonMap->search(Point3f(0, 0, 0) /* lookup position */, m_photonRadius, results);
-
-		for (uint32_t i : results) {
-            const Photon &photon = (*m_photonMap)[i];
-			cout << "Found photon!" << endl;
-			cout << " Position  : " << photon.getPosition().toString() << endl;
-			cout << " Power     : " << photon.getPower().toString() << endl;
-			cout << " Direction : " << photon.getDirection().toString() << endl;
-		}
     }
 
     virtual Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &_ray) const override {
-    	throw NoriException("PhotonMapper::Li(): not implemented!");
+    	
+	/* How to find photons?
+	 * std::vector<uint32_t> results;
+	 * m_photonMap->search(Point3f(0, 0, 0), // lookup position
+         *                     m_photonRadius,   // search radius
+         *                     results);
+         *
+	 * for (uint32_t i : results) {
+         *    const Photon &photon = (*m_photonMap)[i];
+	 *    cout << "Found photon!" << endl;
+	 *    cout << " Position  : " << photon.getPosition().toString() << endl;
+	 *    cout << " Power     : " << photon.getPower().toString() << endl;
+	 *    cout << " Direction : " << photon.getDirection().toString() << endl;
+	 * }
+	 */
+
+	// put your code for path tracing with photon gathering here
+    
     }
 
     virtual std::string toString() const override {

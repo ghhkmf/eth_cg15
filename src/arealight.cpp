@@ -57,6 +57,12 @@ public:
         throw NoriException("To implement...");
     }
 
+
+    virtual Color3f samplePhoton(Ray3f &ray, const Point2f &sample1, const Point2f &sample2) const override {
+        throw NoriException("To implement...");
+    }
+
+
 protected:
     Color3f m_radiance;
 };
