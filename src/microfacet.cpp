@@ -80,51 +80,73 @@ public:
 
 	/// Evaluate the BRDF for the given pair of directions
 	virtual Color3f eval(const BSDFQueryRecord &bRec) const override {
+
+		if (bRec.measure != ESolidAngle || Frame::cosTheta(bRec.wi) <= 0
+				|| Frame::cosTheta(bRec.wo) <= 0)
+			return Color3f(0.0f);
+
+		float cos_theta_i = Frame::cosTheta(bRec.wi);
+		float cos_theta_o = Frame::cosTheta(bRec.wo);
+
 		Normal3f wh = (bRec.wi + bRec.wo).normalized();
+
 		float Dh = evalBeckmann(wh);
 		float F = fresnel(wh.dot(bRec.wi), m_extIOR, m_intIOR);
 		float G = smithBeckmannG1(bRec.wi, wh) * smithBeckmannG1(bRec.wo, wh);
 
-		float cos_theta_i = Frame::cosTheta(bRec.wi);
-		float cos_theta_o = Frame::cosTheta(bRec.wo);
-		return m_kd / M_PI
-				+ m_ks * (Dh * F * G) / (4 * cos_theta_i * cos_theta_o);
-	}
+		float cos2 = cos_theta_i * cos_theta_o;
+		if (cos2 < 0) {
+			cos2 = -cos2;
+		}
 
+		return m_kd / M_PI + m_ks * (Dh * F * G) / (4.f * cos2);
+
+	}
 	/// Evaluate the sampling density of \ref sample() wrt. solid angles
 	virtual float pdf(const BSDFQueryRecord &bRec) const override {
+
+		if (bRec.measure != ESolidAngle || Frame::cosTheta(bRec.wi) <= 0
+				|| Frame::cosTheta(bRec.wo) <= 0) {
+			return 0.0f;
+		}
+
 		Normal3f wh = (bRec.wi + bRec.wo).normalized();
+
 		float Dh = evalBeckmann(wh);
+
 		float cos_theta_h = Frame::cosTheta(wh);
 		float cos_theta_o = Frame::cosTheta(bRec.wo);
-		float J = 1 / (4 * wh.dot(bRec.wo));
-		return m_ks * Dh * cos_theta_h * J + (1 - m_ks) * cos_theta_o / M_PI;
 
+		float J = 1 / (4 * wh.dot(bRec.wo));
+
+		return m_ks * Dh * cos_theta_h * J + (1 - m_ks) * cos_theta_o / M_PI;
 	}
 
 	/// Sample the BRDF
 	virtual Color3f sample(BSDFQueryRecord &bRec, const Point2f &_sample) const
 			override {
 
-		Point2f sample(_sample);
+		bRec.measure = ESolidAngle;
 
-		if (sample(0) < m_ks) {
+		Point2f sample(_sample);
+		if (sample(0) <= m_ks) {
 			//Specular
 			sample(0) = sample(0) / m_ks; // transform sample into range [0;1]
-			Vector3f n = Warp::squareToBeckmann(sample, m_alpha);
-		//	bRec.measure = EUnknownMeasure;
+			Normal3f n = Warp::squareToBeckmann(sample, m_alpha);
 			bRec.wo = 2 * n.dot(bRec.wi) * n - bRec.wi;
 		} else {
 			//Diffuse
-			if (Frame::cosTheta(bRec.wi) <= 0)
-				return Color3f(0.0f);
 			sample(0) = (sample(0) - m_ks) / (1 - m_ks); // transform sample into range [0;1]
-		//	bRec.measure = ESolidAngle;
 			bRec.wo = Warp::squareToCosineHemisphere(sample);
 		}
 
-		return eval(bRec) / pdf(bRec) * Frame::cosTheta(bRec.wo);
+		if (Frame::cosTheta(bRec.wi) <=0 || Frame::cosTheta(bRec.wo) <= 0)
+			return Color3f(0.0f);
 
+		if (pdf(bRec) > 0)
+			return eval(bRec) / pdf(bRec) * Frame::cosTheta(bRec.wo);
+		else
+			return Color3f(0.f);
 	}
 
 	virtual std::string toString() const override {
