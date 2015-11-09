@@ -45,15 +45,6 @@ public:
 		return (lRec.p == m_position) ? 1.f : 0.f;
 	}
 
-	EmittedValues getEmittedValues(Point3f p) {
-		EmittedValues val;
-		val.p = p;
-		val.Li = getRadiance(p);
-		val.ray = getRayToPoint(p);
-		val.wi = getWi(p);
-		return val;
-	}
-
 	std::string toString() const {
 		return tfm::format("PointLight[ \n"
 				" Position = \"%s\" \n"
