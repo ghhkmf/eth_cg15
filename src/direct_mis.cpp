@@ -36,42 +36,43 @@ public:
 
 		EmitterQueryRecord iRec = EmitterQueryRecord(its.p);
 
-		for (std::vector<Emitter*>::const_iterator it = emis.begin();
-				it != emis.end(); ++it) {
+//		for (std::vector<Emitter*>::const_iterator it = emis.begin();
+//				it != emis.end(); ++it) {
 
-			Emitter* emi = *it;
+		int randomIndex = rand() % emis.size();
 
-			//Sample Emitter
-			Color3f Lo_em = emi->sample(iRec, sampler->next2D()); //Div by pdf
+		Emitter* emi = emis.at(randomIndex);
+		//Sample Emitter
+		Color3f Lo_em = emis.size() * emi->sample(iRec, sampler->next2D()); //Instead of iterating over all emitter, mulply because MC
 
-			//Get BSDF
-			const BSDF* bsdf = its.mesh->getBSDF();
-			BSDFQueryRecord query = BSDFQueryRecord(its.toLocal(iRec.wi),
-					its.toLocal(-ray.d), ESolidAngle);
-			query.uv = its.uv;
-			Color3f bsdfVal_em = bsdf->eval(query);
+		//Get BSDF
+		const BSDF* bsdf = its.mesh->getBSDF();
+		BSDFQueryRecord query2 = BSDFQueryRecord(its.toLocal(iRec.wi),
+				its.toLocal(-ray.d), ESolidAngle);
+		query2.uv = its.uv;
+		Color3f bsdfVal_em = bsdf->eval(query2);
 
-			//Check if something blocks the visibility
-			if (!scene->rayIntersect(iRec.shadowRay)) {
-				//Multiply by cos of normal of reflec. normal
-				float cos_i = iRec.n.dot(-iRec.wi);
-				if (cos_i < 0)
-					cos_i = -cos_i;
+		//Check if something blocks the visibility
+		if (!scene->rayIntersect(iRec.shadowRay)) {
+			//Multiply by cos of normal of reflec. normal
+			float cos_i = iRec.n.dot(-iRec.wi);
+			if (cos_i < 0)
+				cos_i = -cos_i;
 
-				float cos0 = its.geoFrame.n.dot(iRec.wi);
-				if (cos0 < 0)
-					cos0 = -cos0;
+			float cos0 = its.geoFrame.n.dot(iRec.wi);
+			if (cos0 < 0)
+				cos0 = -cos0;
 
-				F_em = F_em
-						+ Lo_em * bsdfVal_em * cos0 * cos_i
-								/ (its.p - iRec.p).squaredNorm();
-			}
+			F_em = F_em
+					+ Lo_em * bsdfVal_em * cos0 * cos_i
+							/ (its.p - iRec.p).squaredNorm();
 		}
+//		}
 
 		// BRDF part------------------------------------
 		Color3f F_mat = Color3f(0.0f);
 
-		const BSDF* bsdf = its.mesh->getBSDF();
+		//const BSDF* bsdf = its.mesh->getBSDF();
 		Vector3f toCam = -ray.d.normalized();
 
 		BSDFQueryRecord query(its.toLocal(toCam)); //wi Camera, wo sampled ray
@@ -105,7 +106,7 @@ public:
 			cos0 = -cos0;
 
 		float ems_pdf = iRec.pdf;
-		mat_pdf=mat_pdf*cos0*cos_i/(its.p - its2.p).squaredNorm();
+		mat_pdf = mat_pdf * cos0 * cos_i / (its.p - its2.p).squaredNorm();
 
 		float w_em = ems_pdf / (ems_pdf + mat_pdf);
 		float w_mat = mat_pdf / (ems_pdf + mat_pdf);

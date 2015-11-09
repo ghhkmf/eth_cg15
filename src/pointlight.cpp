@@ -27,16 +27,22 @@ public:
 	}
 
 	Color3f sample(EmitterQueryRecord &lRec, const Point2f &sample) const {
-		throw NoriException("To implement...");
-		return Color3f(0.f); //TODO
+		lRec.p = m_position;
+		lRec.wi = (m_position - lRec.ref).normalized();
+		lRec.n=-lRec.wi;
+		lRec.pdf=1.f;
+		lRec.shadowRay=Ray3f(lRec.ref,lRec.wi,Epsilon,(lRec.p-lRec.ref).norm());
+		return eval(lRec) / pdf(lRec);
 	}
 	Color3f eval(const EmitterQueryRecord &lRec) const {
-		float dist = (lRec.ref - m_position).norm();
-		return m_power / (4 * M_PI * dist * dist);
+		if (lRec.p == m_position) {
+			return m_power / (4 * M_PI);
+		} else {
+			return Color3f(0.f);
+		}
 	}
 	float pdf(const EmitterQueryRecord &lRec) const {
-		throw NoriException("To implement...");
-		return 0.f; //TODO
+		return (lRec.p == m_position) ? 1.f : 0.f;
 	}
 
 	EmittedValues getEmittedValues(Point3f p) {
