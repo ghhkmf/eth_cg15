@@ -77,14 +77,9 @@ public:
 
     }
 
-    EmittedValues getEmittedValues(Point3f p){
-        throw NoriException("Methods should not be called");
-
-        	EmittedValues val;
-        	val.p=p;
-        	return val;
-        }
-
+    virtual Color3f samplePhoton(Ray3f &ray, const Point2f &sample1, const Point2f &sample2) const override {
+        throw NoriException("To implement...");
+    }
 
 
 protected:

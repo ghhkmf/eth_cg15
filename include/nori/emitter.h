@@ -116,6 +116,11 @@ public:
     virtual float pdf(const EmitterQueryRecord &lRec) const = 0;
 
 
+    /// Sample a photon
+    virtual Color3f samplePhoton(Ray3f &ray, const Point2f &sample1, const Point2f &sample2) const {
+        throw NoriException("Emitter::samplePhoton(): not implemented!");
+    }
+
 
     /**
      * \brief Virtual destructor
