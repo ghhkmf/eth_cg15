@@ -18,8 +18,6 @@
 
 #include <nori/bsdf.h>
 #include <nori/frame.h>
-#include <math.h>
-
 NORI_NAMESPACE_BEGIN
 
 /// Ideal dielectric BSDF
@@ -46,24 +44,44 @@ public:
 	virtual Color3f sample(BSDFQueryRecord &bRec, const Point2f &sample) const
 			override {
 
-		if (Frame::cosTheta(bRec.wi) <= 0)
-			return Color3f(0.0f);
+		//	if(Frame::cosTheta(bRec.wi)==0)
+		//		return Color3f(0.f);
+
+		Vector3f n(0, 0, 1);
+		float n1 = m_extIOR;
+		float n2 = m_intIOR;
+
+		float cosT = bRec.wi.z();
+
+		if (cosT < 0) {
+			n1 = m_intIOR;
+			n2 = m_extIOR;
+			n = -n;
+			cosT = -cosT;
+		}
 
 		//Sample depending on Fresnel
-		float F = fresnel(Frame::cosTheta(bRec.wi), m_extIOR, m_intIOR);
+		float F = fresnel(cosT, n1, n2);
+		float snell = n1 / n2;
 
-		if (sample.x() <= F) {
+		if (sample.x() > F) {
+
+			Vector3f part1;
+			Vector3f part2;
+
 			//Refraction
-			float snell = m_extIOR/m_intIOR;
-			Vector3f n(0,0,1);
+			part1 = -snell * (bRec.wi - cosT * n);
+			part2 = n * sqrt(1 - snell * snell * (1 - cosT * cosT));
 
-			// Reflection in local coordinates
-			bRec.wo = -snell*(bRec.wi-Frame::cosTheta(bRec.wi)*n)-n*(sqrt(1-snell*snell*(1-Frame::cosTheta(bRec.wi)*Frame::cosTheta(bRec.wi))));
+			bRec.wo = part1 - part2;
+			bRec.wo = bRec.wo.normalized();
 
 			bRec.measure = EDiscrete;
 
 			/* Relative index of refraction: no change */
 			bRec.eta = 1.0f;
+			//return snell * snell * (1 - F) * Color3f(1.f);
+			return snell * snell * Color3f(1.f); //Montecarlo deterministic (1-F)/pdf=(1-F)
 		} else {
 			//Reflection
 			// Reflection in local coordinates
@@ -72,10 +90,10 @@ public:
 
 			/* Relative index of reflection: no change */
 			bRec.eta = 1.0f;
+
+			//return Color3f(1.f)*F;///Color3f(1.f)*F cosT;
+			return Color3f(1.f); //Montecarlo deterministic
 		}
-
-		return Color3f(1.0f);
-
 	}
 
 	virtual std::string toString() const override {

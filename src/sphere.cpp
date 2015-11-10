@@ -59,12 +59,16 @@ public:
     	}
 
     	float t_cand = cod - sqrt(m_radius*m_radius-D_2);
+    	float t_cand2 = cod + sqrt(m_radius*m_radius-D_2);
 
     	//Set candidate regardless of boundaries
     	t=t_cand;
 
     	//Return if in boundaries
     	if(t_cand >= ray.mint && t_cand <= ray.maxt){
+    		return true;
+    	}else if(t_cand2 >= ray.mint && t_cand2 <= ray.maxt){
+    		t=t_cand2;
     		return true;
     	}
 

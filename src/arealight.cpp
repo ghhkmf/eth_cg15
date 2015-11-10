@@ -63,8 +63,10 @@ public:
 
         Ray3f shadowRay(lRec.ref, lRec.wi, Epsilon, (lRec.p - lRec.ref).norm()-Epsilon);
         lRec.shadowRay = shadowRay;
-
-        return eval(lRec)/pdf(lRec);
+        if(pdf(lRec)>0)
+        	return eval(lRec)/pdf(lRec);
+        else
+        	return Color3f(0.f);
     }
 
     virtual float pdf(const EmitterQueryRecord &lRec) const override {
