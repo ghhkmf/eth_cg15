@@ -14,17 +14,13 @@ public:
 	}
 
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
-		return this->Li(scene, sampler, ray, false);
-	}
-
-	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray,
-			bool isDiffuseBounce) const {
 		/* Find the surface that is visible in the requested direction */
 		Intersection its;
 
 		// If not visible return black
 		if (!scene->rayIntersect(ray, its))
 			return Color3f(0.0f);
+
 
 		//Get Le
 		Color3f Le = Color3f(0.0f);
@@ -35,6 +31,9 @@ public:
 			Le = emi2->eval(iRec2);
 		}
 
+		// No Ld
+
+		//Get Li
 		const BSDF* bsdf = its.mesh->getBSDF();
 		Vector3f toCam = -ray.d.normalized();
 
@@ -46,11 +45,12 @@ public:
 		Ray3f lightRay(its.p, its.toWorld(query.wo));
 
 		if (sampler->next1D() > m_q)
-			return Le+this->Li(scene, sampler, lightRay, bsdf->isDiffuse())
-					* bsdfVal / (1 - m_q);
+			return Le + this->Li(scene, sampler, lightRay) * bsdfVal / (1 - m_q);
 		else
 			return Le;
+
 	}
+
 
 	std::string toString() const {
 		return "DirectPATHMATSIntegrator[]";

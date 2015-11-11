@@ -10,7 +10,7 @@ NORI_NAMESPACE_BEGIN
 class DirectPATHMISIntegrator: public Integrator {
 public:
 	DirectPATHMISIntegrator(const PropertyList &props) {
-		m_q = 0.9; //TODO: Chech this
+		m_q = 0.4; //TODO: Chech this
 	}
 
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
@@ -26,21 +26,6 @@ public:
 		if (!scene->rayIntersect(ray, its))
 			return Color3f(0.0f);
 
-		//Get Ld - No Ld only if emitter hit
-
-		Color3f Ld = Color3f(0.f);
-		const std::vector<Emitter *> emis = scene->getEmitters();
-
-		int randomIndex = rand() % emis.size();
-
-		Emitter* emi = emis.at(randomIndex);
-		//Sample Emitter
-		EmitterQueryRecord iRec(its.p);
-		Ld = emis.size()*emi->sample(iRec, sampler->next2D()); //Instead of iterating over all emitter, mulply because MC
-		float cos_i = std::abs(iRec.n.dot(-iRec.wi));
-		float cos0 = std::abs(its.geoFrame.n.dot(iRec.wi));
-		Ld = Ld*cos0*cos_i/ (its.p - iRec.p).squaredNorm();
-
 		//Get Le
 		Color3f Le = Color3f(0.0f);
 		const Emitter* emi2 = its.mesh->getEmitter();
@@ -48,9 +33,9 @@ public:
 			//Its an Emitter.
 			EmitterQueryRecord iRec2(its.p);
 			Le = emi2->eval(iRec2);
-			return Le / (1 - m_q);
 		}
 
+		//Get Li - Infos
 		const BSDF* bsdf = its.mesh->getBSDF();
 		Vector3f toCam = -ray.d.normalized();
 
@@ -61,17 +46,77 @@ public:
 		//Check if intersect with emitter
 		Ray3f lightRay(its.p, its.toWorld(query.wo));
 
-		Color3f Li = Color3f(0.f);
+		// Get Ld - MULTIPLE IMPORTANCE SAMPLING
 
-		if (sampler->next1D() > m_q)
+		// BSDF Part
+		float mat_pdf = bsdf->pdf(query);
+		Color3f F_mat(0.f);
+		Intersection its2;
+
+		if (scene->rayIntersect(lightRay, its2)) {
+
+			if (its2.mesh->getEmitter()) {
+				//It intersects with light source
+				const Emitter* emi = its2.mesh->getEmitter();
+				EmitterQueryRecord iRec = EmitterQueryRecord(its2.p);
+				Color3f Lo_b = emi->eval(iRec);
+				F_mat = Lo_b * bsdfVal;
+			}
+		}
+
+		Color3f Ld(0.f);
+		Color3f emiVal;
+		float cos_i = 1.f;
+		float cos0 = 1.f;
+		Color3f emiBsdfVal;
+
+		//Emitter Ld-------------
+
+		const std::vector<Emitter *> emis = scene->getEmitters();
+		int randomIndex = rand() % emis.size();
+		Emitter* emi = emis.at(randomIndex);
+		EmitterQueryRecord iRec = EmitterQueryRecord(its.p);
+		emiVal = emi->sample(iRec, sampler->next2D());
+
+		cos_i = std::abs(iRec.n.dot(-iRec.wi)); //iRec.ref = inter Point, iRec.p = point at emitter
+		cos0 = std::abs(its.geoFrame.n.dot(iRec.wi));
+
+		//Get bsdfVal
+		BSDFQueryRecord emiQuery(its.toLocal(toCam), -iRec.wi, ESolidAngle);
+		emiBsdfVal = bsdf->eval(emiQuery);
+
+		Color3f F_em = emiBsdfVal * emiVal * cos_i * cos0
+				/ (its.p - iRec.p).squaredNorm();
+
+		float ems_pdf = iRec.pdf;
+
+		//Same units--------------------
+
+		//Same units
+		cos_i = std::abs(Frame::cosTheta(query.wi));
+
+		cos0 = std::abs(Frame::cosTheta(query.wo));
+
+		mat_pdf = mat_pdf * cos0 * cos_i / (its.p - its2.p).squaredNorm();
+		float w_em = ems_pdf / (ems_pdf + mat_pdf);
+		float w_mat = mat_pdf / (ems_pdf + mat_pdf);
+
+		Ld = w_em * F_em + w_mat * F_mat;
+
+		//----------------------------------------
+		//	Russian Roulette
+
+		Color3f Li(0.f);
+		if (sampler->next1D() > m_q) {
 			Li = this->Li(scene, sampler, lightRay, bsdf->isDiffuse())
 					* bsdfVal;
+		}
 
-		if (isDiffuseBounce)
-			return (Li + Ld) / (1 - m_q);
-
-		return (Le + Li + Ld) / (1 - m_q);
-
+		if (isDiffuseBounce) { //== Not Specular
+			return (Ld + Li) / (1 - m_q);
+		} else {
+			return (Le + Ld + Li) / (1 - m_q);
+		}
 	}
 
 	std::string toString() const {

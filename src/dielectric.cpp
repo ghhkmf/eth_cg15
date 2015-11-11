@@ -44,9 +44,6 @@ public:
 	virtual Color3f sample(BSDFQueryRecord &bRec, const Point2f &sample) const
 			override {
 
-		//	if(Frame::cosTheta(bRec.wi)==0)
-		//		return Color3f(0.f);
-
 		Vector3f n(0, 0, 1);
 		float n1 = m_extIOR;
 		float n2 = m_intIOR;
@@ -64,36 +61,34 @@ public:
 		float F = fresnel(cosT, n1, n2);
 		float snell = n1 / n2;
 
-		if (sample.x() > F) {
+		bRec.eta = 1.0f;
+		bRec.measure = EDiscrete;
 
-			Vector3f part1;
-			Vector3f part2;
+		//Refraction
+		Vector3f part1 = -snell * (bRec.wi - cosT * n);
+		float cons = sqrt(1.0f - (snell * snell) * (1.0f - cosT * cosT));
+		Vector3f part2 = n * cons;
 
-			//Refraction
-			part1 = -snell * (bRec.wi - cosT * n);
-			part2 = n * sqrt(1 - snell * snell * (1 - cosT * cosT));
+		Vector3f refraction = part1 - part2;
+		refraction = refraction.normalized();
 
-			bRec.wo = part1 - part2;
-			bRec.wo = bRec.wo.normalized();
+		//Reflection
+		Vector3f reflection = Vector3f(-bRec.wi.x(), -bRec.wi.y(), bRec.wi.z());
 
-			bRec.measure = EDiscrete;
+		// Total Reflection?
+		bool isTReflec = cons > 1;
 
-			/* Relative index of refraction: no change */
-			bRec.eta = 1.0f;
-			//return snell * snell * (1 - F) * Color3f(1.f);
-			return snell * snell * Color3f(1.f); //Montecarlo deterministic (1-F)/pdf=(1-F)
-		} else {
-			//Reflection
-			// Reflection in local coordinates
-			bRec.wo = Vector3f(-bRec.wi.x(), -bRec.wi.y(), bRec.wi.z());
-			bRec.measure = EDiscrete;
-
-			/* Relative index of reflection: no change */
-			bRec.eta = 1.0f;
-
+		if (sample.x() < F || isTReflec) {
+			bRec.wo = reflection;
 			//return Color3f(1.f)*F;///Color3f(1.f)*F cosT;
 			return Color3f(1.f); //Montecarlo deterministic
+
+		} else {
+			bRec.wo = refraction;
+			//return snell * snell * (1 - F) * Color3f(1.f)/cos;
+			return snell * snell * Color3f(1.f); //Montecarlo deterministic (1-F)/pdf=(1-F)
 		}
+
 	}
 
 	virtual std::string toString() const override {
@@ -104,7 +99,8 @@ public:
 	}
 private:
 	float m_intIOR, m_extIOR;
-};
+}
+;
 
 NORI_REGISTER_CLASS(Dielectric, "dielectric");
 NORI_NAMESPACE_END
