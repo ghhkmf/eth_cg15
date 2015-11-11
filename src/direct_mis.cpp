@@ -88,58 +88,58 @@ public:
 				const Emitter* emi = its_im.mesh->getEmitter();
 				EmitterQueryRecord iRec = EmitterQueryRecord(its_im.p);
 				Color3f Lo_b = emi->eval(iRec);
-
 				F_mat = Lo_b * bsdfVal_b;
 			}
 		}
 
 		//Same units
-		float cos_i;
-
-		float cos0;
-
+		EmitterQueryRecord emiRecord_im = EmitterQueryRecord(its.p, its_im.p,
+						its_im.geoFrame.n);
 		//w_ie part
-		float ems_pdf_ie = emiRecord.pdf;
+		float cos0_ie = std::abs(emiRecord.n.dot(-emiRecord.wi.normalized()));
+		float cos_i_ie = std::abs(its.geoFrame.n.dot(emiRecord.wi.normalized()));
+
+
+		float cos0_im = std::abs(its.geoFrame.n.dot(emiRecord_im.wi));
+		float cos_i_im = std::abs(its_im.geoFrame.n.dot(-emiRecord_im.wi));
+
+
+		float ems_pdf_ie = emiRecord.pdf * cos0_ie * cos_i_ie
+				/ ((its.p - emiRecord.p).squaredNorm()*emis.size());;
+
 		float mat_pdf_ie = bsdf->pdf(
 				BSDFQueryRecord(its.toLocal(toCam), emiRecord.wi, ESolidAngle));
 
-		cos0 = std::abs(emiRecord.n.dot(-emiRecord.wi));
-		cos_i = std::abs(its.geoFrame.n.dot(emiRecord.wi));
 
-		ems_pdf_ie = ems_pdf_ie * cos0 * cos_i
-				/ ((its.p - emiRecord.p).squaredNorm() * emis.size());
 
-		EmitterQueryRecord emiRecord_im = EmitterQueryRecord(its.p, its_im.p,
-				its_im.geoFrame.n);
-
-		float ems_pdf_im = emi->pdf(emiRecord_im);
+		// w_im part
+		float ems_pdf_im = emi->pdf(emiRecord_im) * cos0_im * cos_i_im
+				/ ((its.p - its_im.p).squaredNorm()*emis.size());
 		float mat_pdf_im = bsdf->pdf(bsdfQueryWim);
-		;
 
-		cos0 = std::abs(its.geoFrame.n.dot(emiRecord_im.wi));
-		cos_i = std::abs(its_im.geoFrame.n.dot(-emiRecord_im.wi));
 
-		ems_pdf_im = ems_pdf_im * cos0 * cos_i
-				/ ((its.p - its_im.p).squaredNorm() * emis.size());
 
+
+
+		//Total part
 		float w_em = ems_pdf_ie / (ems_pdf_ie + mat_pdf_ie);
 		float w_mat = mat_pdf_im / (ems_pdf_im + mat_pdf_im);
 
 		bool isEmNan = false;
 		if (w_em != w_em) {
-		//	cout << "W_em is NaN" << endl;
+			//	cout << "W_em is NaN" << endl;
 			isEmNan = true;
 		}
 		bool isMatNan = false;
 		if (w_mat != w_mat) {
-		//	cout << "W_mat is NaN" << endl;
+			//	cout << "W_mat is NaN" << endl;
 			isMatNan = true;
 		}
 
 		if (!isEmNan && !isMatNan)
 			return Le + w_em * F_em + w_mat * F_mat;
 
-		return Le;
+		return Le + F_em;
 	}
 
 	std::string toString() const {
