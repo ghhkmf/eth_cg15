@@ -97,7 +97,7 @@ public:
 
 		cos0 = std::abs(Frame::cosTheta(query.wo));
 
-		mat_pdf = mat_pdf * cos0 * cos_i / (its.p - its2.p).squaredNorm();
+		mat_pdf = mat_pdf * cos0 * cos_i / ((its.p - its2.p).squaredNorm()*emis.size());
 		float w_em = ems_pdf / (ems_pdf + mat_pdf);
 		float w_mat = mat_pdf / (ems_pdf + mat_pdf);
 
