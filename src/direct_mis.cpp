@@ -20,10 +20,7 @@ public:
 		if (!scene->rayIntersect(ray, its))
 			return Color3f(0.0f);
 
-		const std::vector<Emitter *> emis = scene->getEmitters();
-
 		Color3f Le = Color3f(0.0f);
-
 		const Emitter* emi2 = its.mesh->getEmitter();
 		if (emi2) {
 			// Get Le
@@ -31,65 +28,65 @@ public:
 			Le = emi2->eval(iRec2);
 		}
 
-		//Emitter part
+		//Global constants------------------------
+
+		//BSDF
+		const BSDF* bsdf = its.mesh->getBSDF();
+
+		//Get random Emitter
+		const std::vector<Emitter *> emis = scene->getEmitters();
+		int randomIndex = rand() % emis.size();
+		Emitter* emi = emis.at(randomIndex);
+
+		//Camera Ray
+		Vector3f toCam = -ray.d.normalized();
+
+		//Emitter part - Direct Illumination --------------------------
 		Color3f F_em = Color3f(0.0f);
 
-		EmitterQueryRecord iRec = EmitterQueryRecord(its.p);
+		EmitterQueryRecord emiRecord = EmitterQueryRecord(its.p);
+		Color3f Lo_em = emis.size() * emi->sample(emiRecord, sampler->next2D()); //Instead of iterating over all emitter, mulply because MC
 
-//		for (std::vector<Emitter*>::const_iterator it = emis.begin();
-//				it != emis.end(); ++it) {
+		// W_ie = emiRecord.wi - from ref to p
+		// P_ie = emiRecord.p
+		// n_ie = emiRecord.n
 
-		int randomIndex = rand() % emis.size();
-
-		Emitter* emi = emis.at(randomIndex);
-		//Sample Emitter
-		Color3f Lo_em = emis.size() * emi->sample(iRec, sampler->next2D()); //Instead of iterating over all emitter, mulply because MC
-
-		//Get BSDF
-		const BSDF* bsdf = its.mesh->getBSDF();
-		BSDFQueryRecord query2 = BSDFQueryRecord(its.toLocal(iRec.wi),
-				its.toLocal(-ray.d), ESolidAngle);
-		query2.uv = its.uv;
-		Color3f bsdfVal_em = bsdf->eval(query2);
+		BSDFQueryRecord bsdfQueryWie = BSDFQueryRecord(
+				its.toLocal(emiRecord.wi), its.toLocal(-ray.d), ESolidAngle);
+		bsdfQueryWie.uv = its.uv;
+		Color3f bsdfVal_em = bsdf->eval(bsdfQueryWie);
 
 		//Check if something blocks the visibility
-		if (!scene->rayIntersect(iRec.shadowRay)) {
+		if (!scene->rayIntersect(emiRecord.shadowRay)) {
 			//Multiply by cos of normal of reflec. normal
-			float cos_i = iRec.n.dot(-iRec.wi);
-			if (cos_i < 0)
-				cos_i = -cos_i;
+			float cos_i = std::abs(emiRecord.n.dot(-emiRecord.wi));
+			float cos0 = std::abs(its.geoFrame.n.dot(emiRecord.wi));
 
-			float cos0 = its.geoFrame.n.dot(iRec.wi);
-			if (cos0 < 0)
-				cos0 = -cos0;
-
-			F_em = F_em
-					+ Lo_em * bsdfVal_em * cos0 * cos_i
-							/ (its.p - iRec.p).squaredNorm();
+			F_em = Lo_em * bsdfVal_em * cos0 * cos_i
+					/ (its.p - emiRecord.p).squaredNorm();
 		}
-//		}
 
 		// BRDF part------------------------------------
 		Color3f F_mat = Color3f(0.0f);
 
-		//const BSDF* bsdf = its.mesh->getBSDF();
-		Vector3f toCam = -ray.d.normalized();
+		BSDFQueryRecord bsdfQueryWim(its.toLocal(toCam)); //wi Camera, wo sampled ray
+		bsdfQueryWim.p = its.p;
+		Color3f bsdfVal_b = bsdf->sample(bsdfQueryWim, sampler->next2D()); //Has cos already in
 
-		BSDFQueryRecord query(its.toLocal(toCam)); //wi Camera, wo sampled ray
-		query.p = its.p;
-		Color3f bsdfVal_b = bsdf->sample(query, sampler->next2D()); //Has cos already in
+		//W_im = bsdfQueryWim.wo
+		//P_im = its_im.p
+		//N_im = its_im.geoFrame.n
 
-		float mat_pdf = bsdf->pdf(query);
 		//Check if intersect with emitter
-		Ray3f lightRay(its.p, its.toWorld(query.wo));
+		Ray3f lightRay(its.p, its.toWorld(bsdfQueryWim.wo));
 
-		Intersection its2;
-		if (scene->rayIntersect(lightRay, its2)) {
+		Intersection its_im;
+		if (scene->rayIntersect(lightRay, its_im)) {
 
-			if (its2.mesh->getEmitter()) {
+			if (its_im.mesh->getEmitter()) {
 				//It intersects with light source
-				const Emitter* emi = its2.mesh->getEmitter();
-				EmitterQueryRecord iRec = EmitterQueryRecord(its2.p);
+				const Emitter* emi = its_im.mesh->getEmitter();
+				EmitterQueryRecord iRec = EmitterQueryRecord(its_im.p);
 				Color3f Lo_b = emi->eval(iRec);
 
 				F_mat = Lo_b * bsdfVal_b;
@@ -97,21 +94,52 @@ public:
 		}
 
 		//Same units
-		float cos_i = Frame::cosTheta(query.wi);
-		if (cos_i < 0)
-			cos_i = -cos_i;
+		float cos_i;
 
-		float cos0 = Frame::cosTheta(query.wo);
-		if (cos0 < 0)
-			cos0 = -cos0;
+		float cos0;
 
-		float ems_pdf = iRec.pdf;
-		mat_pdf = mat_pdf * cos0 * cos_i / (its.p - its2.p).squaredNorm();
+		//w_ie part
+		float ems_pdf_ie = emiRecord.pdf;
+		float mat_pdf_ie = bsdf->pdf(
+				BSDFQueryRecord(its.toLocal(toCam), emiRecord.wi, ESolidAngle));
 
-		float w_em = ems_pdf / (ems_pdf + mat_pdf);
-		float w_mat = mat_pdf / (ems_pdf + mat_pdf);
+		cos0 = std::abs(emiRecord.n.dot(-emiRecord.wi));
+		cos_i = std::abs(its.geoFrame.n.dot(emiRecord.wi));
 
-		return Le + w_em * F_em + w_mat * F_mat;
+		ems_pdf_ie = ems_pdf_ie * cos0 * cos_i
+				/ ((its.p - emiRecord.p).squaredNorm() * emis.size());
+
+		EmitterQueryRecord emiRecord_im = EmitterQueryRecord(its.p, its_im.p,
+				its_im.geoFrame.n);
+
+		float ems_pdf_im = emi->pdf(emiRecord_im);
+		float mat_pdf_im = bsdf->pdf(bsdfQueryWim);
+		;
+
+		cos0 = std::abs(its.geoFrame.n.dot(emiRecord_im.wi));
+		cos_i = std::abs(its_im.geoFrame.n.dot(-emiRecord_im.wi));
+
+		ems_pdf_im = ems_pdf_im * cos0 * cos_i
+				/ ((its.p - its_im.p).squaredNorm() * emis.size());
+
+		float w_em = ems_pdf_ie / (ems_pdf_ie + mat_pdf_ie);
+		float w_mat = mat_pdf_im / (ems_pdf_im + mat_pdf_im);
+
+		bool isEmNan = false;
+		if (w_em != w_em) {
+		//	cout << "W_em is NaN" << endl;
+			isEmNan = true;
+		}
+		bool isMatNan = false;
+		if (w_mat != w_mat) {
+		//	cout << "W_mat is NaN" << endl;
+			isMatNan = true;
+		}
+
+		if (!isEmNan && !isMatNan)
+			return Le + w_em * F_em + w_mat * F_mat;
+
+		return Le;
 	}
 
 	std::string toString() const {
