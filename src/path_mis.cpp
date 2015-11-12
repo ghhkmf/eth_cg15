@@ -88,7 +88,8 @@ public:
 		Color3f F_em = emiBsdfVal * emiVal * cos_i * cos0
 				/ (its.p - iRec.p).squaredNorm();
 
-		float ems_pdf = iRec.pdf;
+		float ems_pdf = iRec.pdf;// * cos_i * cos0
+//				/ (its.p - iRec.p).squaredNorm();;
 
 		//Same units--------------------
 
@@ -97,11 +98,14 @@ public:
 
 		cos0 = std::abs(Frame::cosTheta(query.wo));
 
-		mat_pdf = mat_pdf * cos0 * cos_i / ((its.p - its2.p).squaredNorm()*emis.size());
+		mat_pdf = mat_pdf * cos0 * cos_i / ((its.p - its2.p).squaredNorm());
 		float w_em = ems_pdf / (ems_pdf + mat_pdf);
 		float w_mat = mat_pdf / (ems_pdf + mat_pdf);
 
-		Ld = w_em * F_em + w_mat * F_mat;
+		if(!(w_mat!=w_mat))
+			Ld = w_em * F_em + w_mat * F_mat;
+		else
+			Ld = F_em;
 
 		//----------------------------------------
 		//	Russian Roulette
