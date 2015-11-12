@@ -52,17 +52,9 @@ public:
 		//Check if something blocks the visibility
 		if (!scene->rayIntersect(iRec.shadowRay)) {
 			//Multiply by cos of normal of reflec. normal
-			float cos_i = iRec.n.dot(-iRec.wi);
-			if (cos_i < 0)
-				cos_i = -cos_i;
+			float cos0 = std::abs(its.geoFrame.n.dot(iRec.wi));
 
-			float cos0 = its.geoFrame.n.dot(iRec.wi);
-			if (cos0 < 0)
-				cos0 = -cos0;
-
-			result = result
-					+ Lo * bsdfVal * cos0 * cos_i
-							/ (its.p - iRec.p).squaredNorm();
+			result = result + Lo * bsdfVal * cos0;
 		}
 		//}
 		return result;
