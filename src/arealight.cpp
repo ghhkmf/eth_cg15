@@ -75,8 +75,12 @@ public:
 
        ShapeQueryRecord sRec(lRec.ref,lRec.p);
        sRec.pdf=m_shape->pdfSurface(sRec);
-       return sRec.pdf;
 
+       //convert to solid angles
+       float cos_theta_i = std::abs(lRec.n.dot(-lRec.wi));
+
+       return sRec.pdf*(lRec.p - lRec.ref).squaredNorm()/cos_theta_i;
+//return sRec.pdf
     }
 
     virtual Color3f samplePhoton(Ray3f &ray, const Point2f &sample1, const Point2f &sample2) const override {

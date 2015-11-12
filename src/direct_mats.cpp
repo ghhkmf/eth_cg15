@@ -50,7 +50,6 @@ public:
 				const Emitter* emi = its2.mesh->getEmitter();
 				EmitterQueryRecord iRec = EmitterQueryRecord(its2.p);
 				Color3f Lo = emi->eval(iRec);
-
 				result = result + Lo * bsdfVal;
 			}
 		}
