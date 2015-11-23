@@ -146,6 +146,8 @@ MatrixXf Warp::getRotationMatrix(const Vector3f a, const Vector3f b){
 	m.setIdentity(3, 3);
 	if(a==b){
 		return	m;
+	}else if(a==-b){
+		return -m;
 	}
 	Vector3f v = (Vector3f)a.cross(b);
 	float sin = v.norm();
@@ -160,7 +162,6 @@ MatrixXf Warp::getRotationMatrix(const Vector3f a, const Vector3f b){
 	vx(2,0)=-v.y();
 	vx(2,1)=v.x();
 	vx(2,2)=0;
-
 
 	//Fill the matrix
 	return m+vx+vx*vx*(1-cos)/(sin*sin);

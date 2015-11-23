@@ -85,6 +85,7 @@ public:
      */
     virtual void sampleSurface(ShapeQueryRecord & sRec, const Point2f & sample) const override;
     virtual float pdfSurface(const ShapeQueryRecord & sRec) const override;
+    virtual float getArea()const override;
 
     /// Return the surface area of the given triangle
     float surfaceArea(uint32_t index) const;

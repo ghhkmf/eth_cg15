@@ -10,7 +10,7 @@ NORI_NAMESPACE_BEGIN
 class DirectPATHMATSIntegrator: public Integrator {
 public:
 	DirectPATHMATSIntegrator(const PropertyList &props) {
-		m_q = 0.2; //TODO: Chech this
+		m_q = 0.1; //TODO: Chech this
 	}
 
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
@@ -45,9 +45,9 @@ public:
 		Ray3f lightRay(its.p, its.toWorld(query.wo));
 
 		if (sampler->next1D() > m_q)
-			return Le + this->Li(scene, sampler, lightRay) * bsdfVal / (1 - m_q);
+			return (Le + this->Li(scene, sampler, lightRay) * bsdfVal) / (1 - m_q);
 		else
-			return Le;
+			return Le/(1-m_q);
 
 	}
 

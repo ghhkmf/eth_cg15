@@ -1,21 +1,20 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+ This file is part of Nori, a simple educational ray tracer
 
-    Copyright (c) 2015 by Romain Prévost
+ Copyright (c) 2015 by Romain Prévost
 
-    Nori is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License Version 3
-    as published by the Free Software Foundation.
+ Nori is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License Version 3
+ as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
+ Nori is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
-
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <nori/common.h>
 #include <nori/shape.h>
@@ -25,147 +24,155 @@
 
 NORI_NAMESPACE_BEGIN
 
-class Sphere : public Shape {
+class Sphere: public Shape {
 public:
-    Sphere(const PropertyList & propList) {
-        m_position = propList.getPoint3("center", Point3f());
-        m_radius = propList.getFloat("radius", 1.f);
+	Sphere(const PropertyList & propList) {
+		m_position = propList.getPoint3("center", Point3f());
+		m_radius = propList.getFloat("radius", 1.f);
 
-        m_bbox.expandBy(m_position - Vector3f(m_radius));
-        m_bbox.expandBy(m_position + Vector3f(m_radius));
-    }
+		m_bbox.expandBy(m_position - Vector3f(m_radius));
+		m_bbox.expandBy(m_position + Vector3f(m_radius));
+	}
 
-    virtual BoundingBox3f getBoundingBox(uint32_t index) const override { return m_bbox; }
+	virtual BoundingBox3f getBoundingBox(uint32_t index) const override {
+		return m_bbox;
+	}
 
-    virtual Point3f getCentroid(uint32_t index) const override { return m_position; }
+	virtual Point3f getCentroid(uint32_t index) const override {
+		return m_position;
+	}
 
-    virtual bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const override {
+	virtual bool rayIntersect(uint32_t index, const Ray3f &ray, float &u,
+			float &v, float &t) const override {
 
+		//Analytical solution for intersection with Sphere
+		float cod = (m_position - ray.o).dot(ray.d);
 
-    	//Analytical solution for intersection with Sphere
-    	float cod =(m_position-ray.o).dot(ray.d);
+		// ray.d in opposite direction as Sphere AND not IN sphere
+		if (cod < 0 && (m_position - ray.o).squaredNorm() > m_radius) {
+			return false;
+		}
 
-    	// ray.d in opposite direction as Sphere AND not IN sphere
-    	if(cod<0 && (m_position-ray.o).squaredNorm() > m_radius){
-    		return false;
-    	}
+		float D_2 = (m_position - ray.o).squaredNorm() - (cod * cod);
 
-    	float D_2 = (m_position-ray.o).squaredNorm() - (cod*cod) ;
+		//Compare distances.
+		if (D_2 > m_radius * m_radius) {
+			// No  intersection. Ray passes by
+			return false;
+		}
 
-    	//Compare distances.
-    	if (D_2 > m_radius*m_radius){
-    		// No  intersection. Ray passes by
-    		return false;
-    	}
+		float t_cand = cod - sqrt(m_radius * m_radius - D_2);
+		float t_cand2 = cod + sqrt(m_radius * m_radius - D_2);
 
-    	float t_cand = cod - sqrt(m_radius*m_radius-D_2);
-    	float t_cand2 = cod + sqrt(m_radius*m_radius-D_2);
+		//Set candidate regardless of boundaries
+		t = t_cand;
 
-    	//Set candidate regardless of boundaries
-    	t=t_cand;
+		//Return if in boundaries
+		if (t_cand >= ray.mint && t_cand <= ray.maxt) {
+			return true;
+		} else if (t_cand2 >= ray.mint && t_cand2 <= ray.maxt) {
+			t = t_cand2;
+			return true;
+		}
 
-    	//Return if in boundaries
-    	if(t_cand >= ray.mint && t_cand <= ray.maxt){
-    		return true;
-    	}else if(t_cand2 >= ray.mint && t_cand2 <= ray.maxt){
-    		t=t_cand2;
-    		return true;
-    	}
+		return false;
 
-        return false;
+	}
 
-    }
+	virtual void setHitInformation(uint32_t index, const Ray3f &ray,
+			Intersection & its) const override {
 
-    virtual void setHitInformation(uint32_t index, const Ray3f &ray, Intersection & its) const override {
+		//Intersection Point
+		its.p = ray.o + ray.d * its.t;
 
-
-    	//Intersection Point
-		its.p = ray.o+ray.d*its.t;
-
-		Vector3f relVec = (its.p-m_position).normalized();
-
+		Vector3f relVec = (its.p - m_position).normalized();
 
 		// UV Coordinates SphericalCoordinates
-		Point2f s_cord(
-				std::atan2(relVec.y(), relVec.x()),
-				std::acos(relVec.z())
-		);
-		its.uv[0]=0.5+(s_cord[0])/(2*M_PI); // -Pi PI - s_cord[0]
-		its.uv[1]=s_cord[1]/M_PI; // 0 Pi - s_cord[1]
+		Point2f s_cord(std::atan2(relVec.y(), relVec.x()),
+				std::acos(relVec.z()));
+		its.uv[0] = 0.5 + (s_cord[0]) / (2 * M_PI); // -Pi PI - s_cord[0]
+		its.uv[1] = s_cord[1] / M_PI; // 0 Pi - s_cord[1]
 
 		// Geometric Frame
 		its.geoFrame = Frame(relVec);
 		its.shFrame = Frame(relVec);
 
-    }
+	}
 
-    virtual void sampleSurface(ShapeQueryRecord & sRec, const Point2f & sample) const override {
+	virtual void sampleSurface(ShapeQueryRecord & sRec,
+			const Point2f & sample) const override {
+		//Cosine weighted
+		if (!(sRec.ref.x()!=sRec.ref.x())) {
+			//if sRec is not NaN
+			Vector3f q = Warp::squareToCosineHemisphere(sample);
+			Vector3f pole = (sRec.ref - m_position).normalized();
+			MatrixXf rot = Warp::getRotationMatrix(Vector3f(0.f, 0.f, 1.f),
+					pole);
 
+			sRec.p = rot * q * m_radius + m_position;
+			sRec.n = (rot * q).normalized();
+			sRec.pdf = std::pow(1.f / m_radius, 2)
+					* Warp::squareToCosineHemispherePdf(q);
+		} else {
+			Vector3f q = Warp::squareToUniformSphere(sample);
+			sRec.p = m_position + m_radius * q;
+			sRec.n = q;
+			sRec.pdf = std::pow(1.f / m_radius, 2)
+					* Warp::squareToUniformSpherePdf(Vector3f(0));
+		}
 
-    	//Cosine weighted
+		//Uniform Hemisphere
+		/*
+		 Vector3f q = Warp::squareToUniformSphere(sample);
+		 Vector3f pole = (sRec.ref-m_position).normalized();
+		 if (q.dot(pole) < 0.f)
+		 q = -q;
 
-    	Vector3f q = Warp::squareToCosineHemisphere(sample);
-    	Vector3f pole = (sRec.ref-m_position).normalized();
-    	MatrixXf rot = Warp::getRotationMatrix(Vector3f(0.f,0.f,1.f),pole);
+		 sRec.p = m_position + m_radius * q;
+		 sRec.n = q;
+		 sRec.pdf = std::pow(1.f/m_radius,2) * Warp::squareToUniformHemispherePdf(Vector3f(0.f,0.f,1.f));
+		 */
 
-    	sRec.p=rot*q*m_radius+m_position;
-    	sRec.n=(rot*q).normalized();
-    	sRec.pdf=std::pow(1.f/m_radius,2) * Warp::squareToCosineHemispherePdf(q);
+		/* Old variante
+		 Vector3f q = Warp::squareToUniformSphere(sample);
+		 sRec.p = m_position + m_radius * q;
+		 sRec.n = q;
+		 sRec.pdf = std::pow(1.f/m_radius,2) * Warp::squareToUniformSpherePdf(Vector3f(0));
+		 */
+	}
 
+	virtual float pdfSurface(const ShapeQueryRecord & sRec) const override {
 
-    	//Uniform Hemisphere
-    	/*
-    	Vector3f q = Warp::squareToUniformSphere(sample);
-        Vector3f pole = (sRec.ref-m_position).normalized();
-        if (q.dot(pole) < 0.f)
-            q = -q;
+		Vector3f pole = (sRec.ref - m_position).normalized();
+		MatrixXf rot = Warp::getRotationMatrix(pole, Vector3f(0.f, 0.f, 1.f));
 
-        sRec.p = m_position + m_radius * q;
-        sRec.n = q;
-        sRec.pdf = std::pow(1.f/m_radius,2) * Warp::squareToUniformHemispherePdf(Vector3f(0.f,0.f,1.f));
-        */
+		return std::pow(1.f / m_radius, 2)
+				* Warp::squareToCosineHemispherePdf(
+						rot * (sRec.p - m_position) / m_radius);
 
-    	/* Old variante
-         Vector3f q = Warp::squareToUniformSphere(sample);
-         sRec.p = m_position + m_radius * q;
-         sRec.n = q;
-         sRec.pdf = std::pow(1.f/m_radius,2) * Warp::squareToUniformSpherePdf(Vector3f(0));
-         */
-    }
+		//	return std::pow(1.f/m_radius,2) * Warp::squareToUniformHemispherePdf(Vector3f(0.f,0.f,1.f));
 
-    virtual float pdfSurface(const ShapeQueryRecord & sRec) const override {
+		//	return std::pow(1.f/m_radius,2) * Warp::squareToUniformSpherePdf(Vector3f(0));
 
-    	Vector3f pole = (sRec.ref-m_position).normalized();
-    	MatrixXf rot = Warp::getRotationMatrix(pole,Vector3f(0.f,0.f,1.f));
+	}
+	virtual float getArea() const override {
+		return m_radius * m_radius * M_PI * 4;
+	}
 
-    	return std::pow(1.f/m_radius,2) * Warp::squareToCosineHemispherePdf(rot*(sRec.p-m_position)/m_radius);
-
-
-    //	return std::pow(1.f/m_radius,2) * Warp::squareToUniformHemispherePdf(Vector3f(0.f,0.f,1.f));
-
-    //	return std::pow(1.f/m_radius,2) * Warp::squareToUniformSpherePdf(Vector3f(0));
-
-
-    }
-
-
-    virtual std::string toString() const override {
-        return tfm::format(
-                "Sphere[\n"
-                "  center = %s,\n"
-                "  radius = %f,\n"
-                "  bsdf = %s,\n"
-                "  emitter = %s\n"
-                "]",
-                m_position.toString(),
-                m_radius,
-                m_bsdf ? indent(m_bsdf->toString()) : std::string("null"),
-                m_emitter ? indent(m_emitter->toString()) : std::string("null"));
-    }
+	virtual std::string toString() const override {
+		return tfm::format("Sphere[\n"
+				"  center = %s,\n"
+				"  radius = %f,\n"
+				"  bsdf = %s,\n"
+				"  emitter = %s\n"
+				"]", m_position.toString(), m_radius,
+				m_bsdf ? indent(m_bsdf->toString()) : std::string("null"),
+				m_emitter ? indent(m_emitter->toString()) : std::string("null"));
+	}
 
 protected:
-    Point3f m_position;
-    float m_radius;
+	Point3f m_position;
+	float m_radius;
 };
 
 NORI_REGISTER_CLASS(Sphere, "sphere");

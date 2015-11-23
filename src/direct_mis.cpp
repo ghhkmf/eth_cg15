@@ -61,10 +61,10 @@ public:
 		//Check if something blocks the visibility
 		if (!scene->rayIntersect(emiRecord.shadowRay)) {
 
-			float dist2_ie = (its.p - emiRecord.p).squaredNorm();
+		//	float dist2_ie = (its.p - emiRecord.p).squaredNorm();
 
-			float cos0_ie = std::abs(
-					emiRecord.n.dot(-emiRecord.wi.normalized()));
+		//	float cos0_ie = std::abs(
+		//			emiRecord.n.dot(-emiRecord.wi.normalized()));
 			float cos_i_ie = std::abs(
 					its.geoFrame.n.dot(emiRecord.wi.normalized()));
 
@@ -103,10 +103,10 @@ public:
 				EmitterQueryRecord emiRecord_im = EmitterQueryRecord(its.p,
 						its_im.p, its_im.geoFrame.n);
 				float cos_i_im = std::abs(its.geoFrame.n.dot(emiRecord_im.wi));
-				float cos0_im = std::abs(
-						its_im.geoFrame.n.dot(-emiRecord_im.wi));
+			//	float cos0_im = std::abs(
+			//			its_im.geoFrame.n.dot(-emiRecord_im.wi));
 
-				float dist2_im = (its.p - its_im.p).squaredNorm();
+			//	float dist2_im = (its.p - its_im.p).squaredNorm();
 
 				float ems_pdf_im = emi->pdf(emiRecord_im);
 				float mat_pdf_im = bsdf->pdf(bsdfQueryWim);

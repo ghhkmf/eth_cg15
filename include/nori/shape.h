@@ -146,7 +146,10 @@ public:
      * sRec.n and sRec.pdf are ignored
      * */
     virtual float pdfSurface(const ShapeQueryRecord & sRec) const = 0;
-
+    /**
+     * \brief get Area of this shape
+     * */
+    virtual float getArea() const = 0;
     /**
      * \brief Return the type of object (i.e. Mesh/BSDF/etc.)
      * provided by this instance
