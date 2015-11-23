@@ -1,3 +1,4 @@
+
 #include <nori/integrator.h>
 #include <nori/scene.h>
 #include <nori/bsdf.h>
@@ -10,11 +11,10 @@ NORI_NAMESPACE_BEGIN
 class DirectPATHMATSIntegrator: public Integrator {
 public:
 	DirectPATHMATSIntegrator(const PropertyList &props) {
-		m_q = 0.1; //TODO: Chech this
+		m_q = 0.05; //TODO: Chech this
 	}
 
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
-		/* Find the surface that is visible in the requested direction */
 		Intersection its;
 
 		// If not visible return black
@@ -27,7 +27,7 @@ public:
 		const Emitter* emi2 = its.mesh->getEmitter();
 		if (emi2) {
 			//Its an Emitter.
-			EmitterQueryRecord iRec2(its.p);
+			EmitterQueryRecord iRec2(ray.o, its.p, its.shFrame.n);
 			Le = emi2->eval(iRec2);
 		}
 
@@ -44,11 +44,11 @@ public:
 		//Check if intersect with emitter
 		Ray3f lightRay(its.p, its.toWorld(query.wo));
 
-		if (sampler->next1D() > m_q)
-			return (Le + this->Li(scene, sampler, lightRay) * bsdfVal) / (1 - m_q);
-		else
-			return Le/(1-m_q);
 
+		if (sampler->next1D() > m_q)
+			return Le + this->Li(scene, sampler, lightRay) * bsdfVal/(1.f-m_q);
+		else
+			return Le;
 	}
 
 
