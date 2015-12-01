@@ -204,6 +204,7 @@ public:
 				BSDFQueryRecord query(its.toLocal(toRayOrigin),
 						its.toLocal(-photon.getDirection()), ESolidAngle); //wi Camera, wo sampled ray
 				query.p = its.p;
+				query.uv = its.uv;
 
 				Li = Li
 						+ bsdf->eval(query) * photon.getPower()
