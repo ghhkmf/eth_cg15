@@ -75,7 +75,7 @@ public:
 			}
 		}
 		*/
-		return result;
+		return Color3f(0.0f);
 	}
 
 	std::string toString() const {
