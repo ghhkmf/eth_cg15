@@ -35,7 +35,7 @@ public:
 		const Emitter* emi2 = its.mesh->getEmitter();
 		if (emi2) {
 			// Get Le
-			EmitterQueryRecord iRec2(its.p);
+			EmitterQueryRecord iRec2(ray.o, its.p, its.shFrame.n);
 			result = result + emi2->eval(iRec2);
 		}
 
