@@ -86,6 +86,7 @@ add_executable(nori
   src/path_mis.cpp
   src/volumetricPathTracer.cpp
   src/envMapLight.cpp
+  src/imgtexture.cpp
 )
 
 # The following lines build the warping test application

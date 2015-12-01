@@ -1,0 +1,184 @@
+<scene>
+	<!-- Independent sample generator, user-selected samples per pixel -->
+	<sampler type="independent">
+		<integer name="sampleCount" value="1024"/>
+	</sampler>
+
+	<!-- Use the average visibility integrator -->
+	<integrator type="av">
+		<float name="length" value="5"/>
+	</integrator>
+
+	<!-- Render the scene as viewed by a perspective camera -->
+	<camera type="perspective">
+		<transform name="toWorld">
+			<lookat target="-11, 5, 0" 
+			        origin="10, 1, 1"
+			        up="0, 1, 0"/>
+		</transform>
+
+		<!-- Field of view: 40 degrees -->
+		<float name="fov" value="40"/>
+
+		<!-- 800x600 pixels -->
+		<integer name="width" value="800"/>
+		<integer name="height" value="600"/>
+	</camera>
+
+
+
+	<!-- Walls -->
+	<mesh type="obj">
+		<string name="filename" value="rightWall.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="leftWall.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="ceiling.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="floor.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="emitter.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+
+
+	<!-- Table-->
+	<mesh type="obj">
+		<string name="filename" value="legs.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="table.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+
+	<!-- lamp-->
+	<mesh type="obj">
+		<string name="filename" value="lampBase.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="lampRod1.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="lampRod2.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="bulbHolder.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="spotLight.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+
+
+	<!-- aquarium-->	
+
+	<mesh type="obj">
+		<string name="filename" value="sphereHolder.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="stones.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="grass.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+	<!-->
+	<mesh type="obj">
+		<string name="filename" value="innerSphere.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="outerSphere.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+	<-->
+	<mesh type="obj">
+		<string name="filename" value="horse2.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".8,.8,.8"/>
+		</bsdf>
+	</mesh>
+	
+</scene>
