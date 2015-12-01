@@ -1,0 +1,12 @@
+# Blender MTL File: 'scene merged.blend'
+# Material Count: 1
+
+newmtl Material_#121.001
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.272941 0.213333 0.178824
+Ks 0.005882 0.005882 0.005882
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
