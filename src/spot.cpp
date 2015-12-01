@@ -71,7 +71,9 @@ public:
 	}
 
 	virtual float pdf(const EmitterQueryRecord &lRec)const override {
-		return Warp::squareToUniformSphereCapPdf(Vector3f(0,0,1),cosTotalWidth);
+		float pdfVal = Warp::squareToUniformSphereCapPdf(Vector3f(0,0,1),cosTotalWidth);
+		float cosThetaLight = abs(lRec.n.dot(-lRec.wi));
+		return pdfVal*(lRec.p - lRec.ref).squaredNorm() / cosThetaLight;
 	}
 
 private:
