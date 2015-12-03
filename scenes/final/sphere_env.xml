@@ -7,16 +7,6 @@
 	<!-- Integrator -->
 	<integrator type="volPathTracer" />
 
-	<!-- Environment Map -->
-	<mesh type="sphere">
-		<point name="center" value="0,0,1"/>
-		<float name="radius" value="1000"/> 
-		<!-- radius not bigger than 10000 otherwise black -->
-		<emitter type="env_map">
-			<string  name="filename" value="rnl.exr"/>
-		</emitter>
-	</mesh>
-
 	<!-- Render the scene as viewed by a perspective camera -->
 	<camera type="perspective">
 		<transform name="toWorld">
@@ -31,6 +21,22 @@
 		<integer name="height" value="512"/>
 	</camera>
 
+	<!-- Environment Map & Mediums-->
+	<!-- We assume Medium is only over the whole scene-->
+	<mesh type="sphere">
+		<point name="center" value="0,0,1"/>
+		<float name="radius" value="1000"/> 
+		<!-- radius not bigger than 10000 otherwise black -->
+		<emitter type="env_map">
+			<string name="filename" value="rnl.exr"/>
+		</emitter>
+
+		<medium type="homogen">
+			<float name="sigma_a" value="0.1"/>
+			<float name="sigma_s" value="0.3"/>	
+		</medium>
+	</mesh>
+
 	<!-- Create an analytic sphere -->
 	<mesh type="sphere">
 		<point name="center" value="0,0,1"/>
@@ -39,7 +45,6 @@
 	</mesh>
 
 	<!-- Ground plane -->
-	<!--
 	<mesh type="obj">
 		<string name="filename" value="plane.obj"/>
 
@@ -54,6 +59,5 @@
 		</transform>
 
 	</mesh>
-	-->
 
 </scene>

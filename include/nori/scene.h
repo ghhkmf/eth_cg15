@@ -21,6 +21,8 @@
 
 #include <nori/bvh.h>
 #include <nori/emitter.h>
+#include <nori/medium.h>
+
 
 NORI_NAMESPACE_BEGIN
 
@@ -62,6 +64,10 @@ public:
 
     /// Return a reference to an array containing all emitters
     const std::vector<Emitter *> &getEmitters() const { return m_emitters; }
+
+    /// Return a reference to an array containing all medium
+    const std::vector<Medium *> &getMediums() const { return m_mediums; }
+
 
     /// Return a reference to an array containing all lights
     const std::vector<Emitter *> &getLights() const { return m_emitters; }
@@ -143,6 +149,7 @@ private:
     BVH *m_bvh = nullptr;
 
     std::vector<Emitter *> m_emitters;
+    std::vector<Medium *> m_mediums;
 };
 
 NORI_NAMESPACE_END

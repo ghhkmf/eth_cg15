@@ -22,6 +22,7 @@
 #include <nori/object.h>
 #include <nori/frame.h>
 #include <nori/bbox.h>
+#include <nori/medium.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -110,11 +111,21 @@ public:
     /// Is this mesh an area emitter?
     bool isEmitter() const { return m_emitter != nullptr; }
 
+    /// Is this mesh an area emitter?
+    bool hasMedium() const { return m_medium != nullptr; }
+
     /// Return a pointer to an attached area emitter instance
     Emitter *getEmitter() { return m_emitter; }
 
     /// Return a pointer to an attached area emitter instance (const version)
     const Emitter *getEmitter() const { return m_emitter; }
+
+    /// Return a pointer to an attached area medium instance (const version)
+    const Medium *getMedium() const { return m_medium; }
+
+    /// Return a pointer to an attached area medium instance
+   Medium *getMedium() { return m_medium; }
+
 
     /// Return a pointer to the BSDF associated with this mesh
     const BSDF *getBSDF() const { return m_bsdf; }
@@ -159,6 +170,7 @@ public:
 protected:
     BSDF *m_bsdf = nullptr;      ///< BSDF of the surface
     Emitter *m_emitter = nullptr;     ///< Associated emitter, if any
+    Medium *m_medium = nullptr;     ///< Associated medium, if any
     BoundingBox3f m_bbox;                ///< Bounding box of the mesh
 
 };

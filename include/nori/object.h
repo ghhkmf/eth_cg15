@@ -55,6 +55,7 @@ public:
             case ETexture:    return "texture";
             case EBSDF:       return "bsdf";
             case EEmitter:    return "emitter";
+            case EMedium:	  return "medium";
             case ECamera:     return "camera";
             case EIntegrator: return "integrator";
             case ESampler:    return "sampler";

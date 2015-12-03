@@ -2,6 +2,7 @@
 #include <nori/scene.h>
 #include <nori/bsdf.h>
 #include <nori/emitter.h>
+#include <nori/Medium.h>
 #include <nori/sampler.h>
 
 NORI_NAMESPACE_BEGIN
@@ -9,19 +10,38 @@ NORI_NAMESPACE_BEGIN
 class VolumetricPathTracer: public Integrator {
 public:
 	VolumetricPathTracer(const PropertyList &props) {
-		/* No parameters this time */
-		//Right now its just path_mats
-		//TODO: Vol Path Tracer, Homogeneous
+		m_q = 0.05;
 	}
 
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
 
-		float m_q = 0.05;
 
+		//Check if we are in a Medium
+		// Yes -> Volumetric path tracing
+		// No -> Other Integrator
+		Medium* medium=nullptr;
+		const std::vector<Medium *> ms = scene->getMediums();
+		for (unsigned long var = 0; var < ms.size(); ++var) {
+			Medium* m = ms.at(var);
+			if (m->isInside(ray.o)) {
+				medium = m;
+				break;
+			}
+		}
+		if (medium) {
+			return volumetricPathTracing(scene, sampler, ray, medium);
+		} else {
+			return otherLi(scene, sampler, ray);
+		}
+
+	}
+
+	Color3f otherLi(const Scene *scene, Sampler *sampler, const Ray3f &ray) const{
+		//This is path_mats. Works for Mirror
 		Intersection its;
 
 		// If not visible return black
-		if (!scene->rayIntersect(ray, its)){
+		if (!scene->rayIntersect(ray, its)) {
 			/*This should never happen if there is a environmental Map*/
 			return Color3f(0.3f);
 		}
@@ -33,6 +53,8 @@ public:
 			EmitterQueryRecord iRec2(ray.o, its.p, its.shFrame.n);
 			Le = emi2->eval(iRec2);
 		}
+
+		float tmax = its.t;
 
 		// No Ld
 
@@ -54,9 +76,17 @@ public:
 			return Le;
 	}
 
+	Color3f volumetricPathTracing(const Scene *scene, Sampler *sampler,
+			const Ray3f &ray, const Medium* medium) const{
+		//TODO: DO IT
+			return Color3f(0.3f);
+	}
+
 	std::string toString() const {
 		return "VolumetricPathTracer[]";
 	}
+private:
+	float m_q;
 };
 
 NORI_REGISTER_CLASS(VolumetricPathTracer, "volPathTracer");
