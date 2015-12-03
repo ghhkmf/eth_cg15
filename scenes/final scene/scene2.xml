@@ -131,9 +131,9 @@
 
 	<mesh type="obj">
 		<string name="filename" value="paper.obj"/>
-		<bsdf type="microfacet">
-			<color name="kd" value="0.9, 0.9, 0.9"/>
-			<float name="alpha" value="0.005"/>
+		<bsdf type="diffuse">
+			<texture type="filename" name="rnl.exr">						
+			</texture>
 		</bsdf>
 	</mesh>
 

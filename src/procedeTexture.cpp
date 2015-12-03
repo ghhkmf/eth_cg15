@@ -20,23 +20,28 @@
 #include <nori/texture.h>
 #include <fstream> // for file I/O
 #include <filesystem/resolver.h>
-
+#include <nori/bitmap.h>
+#include <iostream>
 
 
 NORI_NAMESPACE_BEGIN
 
 template <typename T>
-class ProcedTexture : public Texture<T> {
+class ProcedeTexture : public Texture<T> {
 public:
-	ProcedTexture(const PropertyList &props);
+	ProcedeTexture(const PropertyList &props);
 
     virtual std::string toString() const override;
 
     virtual T eval(const Point2f & uv) override {
-		Point2f coord = uv;
-					
-		double noise = ((double)rand() / (RAND_MAX)) ;
-		
+		/*
+		filesystem::path path = getFileResolver()->resolve(filename);
+		std::string filepath = path.str();
+		Bitmap texture(filepath);
+		Color3f color = texture(uv.y(), uv.x());		
+		return color;
+		*/
+		Point2f coord = uv;		
 		double tempx = coord.x()*m_scale.x() + m_shift.x(); 
 		double tempy = coord.y()*m_scale.y() + m_shift.y();
 
@@ -61,30 +66,30 @@ protected:
 };
 
 template <>
-ProcedTexture<float>::ProcedTexture(const PropertyList &props) {
+ProcedeTexture<float>::ProcedeTexture(const PropertyList &props) {
     m_delta = props.getPoint2("delta", Point2f(0));
 	m_shift = props.getVector2("delta", Vector2f(0));
     m_scale = props.getVector2("scale", Vector2f(1));
 	points = props.getFloat("points", 0.f);
 	stripes = props.getFloat("stripes", 1.f);
 	back = props.getFloat("back", 1.f);
-	//filename = props.getString("filename");
+	filename = props.getString("filename");
 }
 
 template <>
-ProcedTexture<Color3f>::ProcedTexture(const PropertyList &props) {
+ProcedeTexture<Color3f>::ProcedeTexture(const PropertyList &props) {
     m_delta = props.getPoint2("delta", Point2f(0));
 	m_shift = props.getVector2("shift", Vector2f(0));
     m_scale = props.getVector2("scale", Vector2f(1));
 	points = props.getColor("points", Color3f(0));
 	stripes = props.getColor("stripes", Color3f(1));
 	back = props.getColor("back", Color3f(1));
-	//filename = props.getString("filename");
+	filename = props.getString("filename");
 }
 
 
 template <>
-std::string ProcedTexture<float>::toString() const {
+std::string ProcedeTexture<float>::toString() const {
     return tfm::format(
         "ImgTexture[\n"
                 "  delta = %s,\n"
@@ -100,7 +105,7 @@ std::string ProcedTexture<float>::toString() const {
 }
 
 template <>
-std::string ProcedTexture<Color3f>::toString() const {
+std::string ProcedeTexture<Color3f>::toString() const {
     return tfm::format(
         "ImgTexture[\n"
                 "  delta = %s,\n"
@@ -115,6 +120,6 @@ std::string ProcedTexture<Color3f>::toString() const {
     );
 }
 
-NORI_REGISTER_TEMPLATED_CLASS(ProcedTexture, float, "procedeTexture_float")
-NORI_REGISTER_TEMPLATED_CLASS(ProcedTexture, Color3f, "procedeTexture_color")
+NORI_REGISTER_TEMPLATED_CLASS(ProcedeTexture, float, "procedeTexture_float")
+NORI_REGISTER_TEMPLATED_CLASS(ProcedeTexture, Color3f, "procedeTexture_color")
 NORI_NAMESPACE_END
