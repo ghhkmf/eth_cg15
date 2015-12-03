@@ -107,6 +107,9 @@ public:
         throw NoriException("Emitter::samplePhoton(): not implemented!");
     }
 
+	virtual float fallOff(float cosTheta, float cosFalloffStart, float cosTotalWidth) const {
+		throw NoriException("Emitter::fallOff(): not implemented!");
+	}
 
     /**
      * \brief Virtual destructor

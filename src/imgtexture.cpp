@@ -37,7 +37,7 @@ public:
 		//double f = (1+sin(coord.x()*m_scale.x()))/2;
 	    //return m_value2*f + m_value1*(1-f);
 		double tempx = coord.x()*m_scale.x() + m_shift.x(); 
-		double tempy = coord.y()*m_scale.y(); + m_shift.y();
+		double tempy = coord.y()*m_scale.y() + m_shift.y();
 
 		if (abs(tempx - round(tempx))<m_delta.x() && abs(tempy - round(tempy))<m_delta.y())
 			return points;
@@ -62,7 +62,7 @@ protected:
 template <>
 ImgTexture<float>::ImgTexture(const PropertyList &props) {
     m_delta = props.getPoint2("delta", Point2f(0));
-	m_shift = props.getVector2("delta", Point2f(0));
+	m_shift = props.getVector2("delta", Vector2f(0));
     m_scale = props.getVector2("scale", Vector2f(1));
 	points = props.getFloat("points", 0.f);
 	stripes = props.getFloat("stripes", 1.f);
@@ -73,7 +73,7 @@ ImgTexture<float>::ImgTexture(const PropertyList &props) {
 template <>
 ImgTexture<Color3f>::ImgTexture(const PropertyList &props) {
     m_delta = props.getPoint2("delta", Point2f(0));
-	m_shift = props.getPoint2("shift", Point2f(0));
+	m_shift = props.getVector2("shift", Vector2f(0));
     m_scale = props.getVector2("scale", Vector2f(1));
 	points = props.getColor("points", Color3f(0));
 	stripes = props.getColor("stripes", Color3f(1));
