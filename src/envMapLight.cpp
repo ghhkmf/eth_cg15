@@ -11,17 +11,20 @@ NORI_NAMESPACE_BEGIN
 
 /**
  * This class is for SPHERE environmal light.
- * For cube the methods pointToIndex and indexToPint have to be changed
+ * For cube the methods pointToIndex and indexToPint have to be changed.
+ *
+ * Implementation from Paper:
+ * http://www.cs.virginia.edu/~gfx/courses/2007/ImageSynthesis/assignments/envsample.pdf
  */
 class EnvMapLight: public Emitter {
 public:
 	typedef Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> FloatMap;
 
 	EnvMapLight(const PropertyList &propList) {
+
 		/* Load exr file */
 		filesystem::path filename = getFileResolver()->resolve(
 				propList.getString("filename"));
-
 		std::ifstream is(filename.str());
 		if (is.fail())
 			throw NoriException("Unable to open OBJ file \"%s\"!", filename);
@@ -34,12 +37,18 @@ public:
 		m_marginalPDF_array = FloatMap(1, m_map.rows());
 		m_marginalCDF_array = FloatMap(1, m_map.rows() + 1);
 
-		cout<<"Calculating marginal and conditional maps"<<endl;
+		// Calculate Marginal and Conditional Maps
+		cout << "Calculating marginal and conditional maps" << endl;
 		preprocessIntensityMap();
 
+		// Use this to plot the maps. Check that the file
+		// "filename2" exists
 		//	saveFloatMap(m_conditionalCDF_map);
 	}
 
+	/*
+	 * Convert the texture into a gray-Intesity map
+	 */
 	FloatMap rgb2gray(Bitmap map) {
 		FloatMap res(map.outerSize(), map.innerSize());
 		for (int row = 0; row < map.outerSize(); row++) {
@@ -73,12 +82,10 @@ public:
 
 	float precompute1D(const int rowNum, const int colTotalNum,
 			FloatMap &values, FloatMap &pdf, FloatMap &cdf) {
-
 		float I = 0;
 		for (int i = 0; i < colTotalNum; i++) {
 			I += values(rowNum, i);
 		}
-
 		for (int i = 0; i < colTotalNum; i++) {
 			pdf(rowNum, i) = values(rowNum, i) / I;
 		}
@@ -88,15 +95,12 @@ public:
 		}
 		cdf(rowNum, colTotalNum) = 1;
 		return I;
-
 	}
 
-	/**
-	 * Sampling Part ------------------------------------------------------------------------------
-	 */
+	// Sampling Part ------------------------------------------------------------------------------
 
 	Color3f sample(EmitterQueryRecord &lRec, const Point2f &sample) const {
-		/*Uniform sampling over shape - SPHERE*/
+		/*Sampling over the texture. Shape used for mapping from index of texture to 3D Point*/
 
 		if (!m_shape)
 			throw NoriException(
@@ -123,9 +127,10 @@ public:
 	}
 
 	/**
-	 * Return index of approximation
+	 * Returns index of sampled element
 	 */
-	int sample1D(int rowNum, FloatMap pdf, FloatMap cdf, float sample) const{
+
+	int sample1D(int rowNum, FloatMap pdf, FloatMap cdf, float sample) const {
 
 		int index = -1;
 		//Linear search for index
@@ -137,12 +142,10 @@ public:
 		}
 		if (index == -1) {
 			cout << "ERROR INDEX -1. Setting it to zero" << endl;
-			index=0;
+			index = 0;
 		}
 		return index;
 	}
-
-
 
 	Color3f eval(const EmitterQueryRecord &lRec) const {
 
@@ -169,9 +172,8 @@ public:
 				* m_conditionalPDF_map(idxs.x(), idxs.y());
 	}
 
-	/**
-	 * Helper Methods
-	 */
+	 // Helper Methods ----------------------------------------------------------------------------------
+
 	std::string toString() const {
 		return tfm::format("EnvironmentalMapLight["
 				" MapSize = \"%s %s\" \n"
