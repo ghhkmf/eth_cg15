@@ -34,6 +34,7 @@ public:
 		m_marginalPDF_array = FloatMap(1, m_map.rows());
 		m_marginalCDF_array = FloatMap(1, m_map.rows() + 1);
 
+		cout<<"Calculating marginal and conditional maps"<<endl;
 		preprocessIntensityMap();
 
 		//	saveFloatMap(m_conditionalCDF_map);
@@ -101,18 +102,22 @@ public:
 			throw NoriException(
 					"There is no shape attached to this Area light!");
 
-		ShapeQueryRecord sRec(lRec.ref);
-		m_shape->sampleSurface(sRec, sample);
-		lRec.p = sRec.p;
-		lRec.pdf = sRec.pdf;
-		lRec.n = sRec.n;
-		lRec.wi = (lRec.p - lRec.ref).normalized();
+		int rowSampledIdx = sample1D(0, m_marginalPDF_array,
+				m_marginalCDF_array, (float) sample.x());
+		int colSampledIdx = sample1D(rowSampledIdx, m_conditionalPDF_map,
+				m_conditionalCDF_map, (float) sample.y());
 
+		Point2f idxs(rowSampledIdx, colSampledIdx);
+		indexToPoint(idxs, lRec.p);
+
+		lRec.pdf = pdf(lRec.p);
+		lRec.n = (lRec.p - m_shape->getCentroid(0)).normalized();
+		lRec.wi = (lRec.p - lRec.ref).normalized();
 		Ray3f shadowRay(lRec.ref, lRec.wi, Epsilon,
 				(lRec.p - lRec.ref).norm() - Epsilon);
 		lRec.shadowRay = shadowRay;
-		if (pdf(lRec) > 0)
-			return eval(lRec) / pdf(lRec);
+		if (lRec.pdf > 0)
+			return eval(lRec) / lRec.pdf;
 		else
 			return Color3f(0.f);
 	}
@@ -120,7 +125,7 @@ public:
 	/**
 	 * Return index of approximation
 	 */
-	int sample1D(int rowNum, FloatMap pdf, FloatMap cdf, float sample) {
+	int sample1D(int rowNum, FloatMap pdf, FloatMap cdf, float sample) const{
 
 		int index = -1;
 		//Linear search for index
@@ -131,37 +136,13 @@ public:
 			}
 		}
 		if (index == -1) {
-			cout << "ERROR INDEX -1" << endl;
+			cout << "ERROR INDEX -1. Setting it to zero" << endl;
+			index=0;
 		}
 		return index;
 	}
 
-	void indexToPoint(Point2f indexes, Point3f &p) {
 
-		float phi = 2*M_PI*((indexes[1]/(m_map.cols()-1))-0.5f);
-		float ro = indexes[0]*M_PI/(m_map.rows()-1);
-
-		BoundingBox3f bb = m_shape->getBoundingBox();
-		float r = ((bb.getCenter()-bb.getCorner(1)).norm())/std::sqrt(2);
-
-		p[0] = std::cos(ro) * std::cos(phi) * r;
-		p[1] = std::sin(ro) * std::cos(phi) * r;
-		p[2] = std::sin(phi) * r;
-	}
-
-	void pointToIndex(Point3f point, Point2f &idx) const{
-		//float r = (m_shape->getCentroid(0) - point).norm();
-		BoundingBox3f bb = m_shape->getBoundingBox();
-		float r = ((bb.getCenter()-bb.getCorner(1)).norm())/std::sqrt(2);
-		float ro = acos(point.z() / r);
-		float phi = atan2(point.y(), point.x());
-
-		float col = (0.5f + phi / (2 * M_PI)) * (m_map.cols() - 1); // -PI PI -> 0 cols-1
-		float row = (ro / M_PI) * (m_map.rows() - 1); // 0 PI -> 0 rows-1
-
-		idx[0]=row;
-		idx[1]=col;
-	}
 
 	Color3f eval(const EmitterQueryRecord &lRec) const {
 
@@ -169,8 +150,8 @@ public:
 			throw NoriException(
 					"There is no shape attached to this Area light!");
 
-		Point2f indexes(0,0);
-		pointToIndex(lRec.p,indexes);
+		Point2f indexes(0, 0);
+		pointToIndex(lRec.p, indexes);
 
 		return m_map(indexes.x(), indexes.y()); // row - col
 	}
@@ -181,19 +162,47 @@ public:
 			throw NoriException(
 					"There is no shape attached to this Area light!");
 
-		ShapeQueryRecord sRec(lRec.ref, lRec.p);
-		sRec.pdf = m_shape->pdfSurface(sRec);
+		Point2f idxs;
+		pointToIndex(lRec.p, idxs);
 
-		//convert to solid angles
-		float cos_theta_i = std::abs(lRec.n.dot(-lRec.wi));
-
-		return sRec.pdf * (lRec.p - lRec.ref).squaredNorm() / cos_theta_i;
+		return m_marginalPDF_array(0, idxs.x())
+				* m_conditionalPDF_map(idxs.x(), idxs.y());
 	}
 
+	/**
+	 * Helper Methods
+	 */
 	std::string toString() const {
 		return tfm::format("EnvironmentalMapLight["
 				" MapSize = \"%s %s\" \n"
 				" ] ", m_map.outerSize(), m_map.innerSize());
+	}
+
+	void indexToPoint(Point2f indexes, Point3f &p) const {
+
+		float phi = 2 * M_PI * ((indexes[1] / (m_map.cols() - 1)) - 0.5f);
+		float ro = indexes[0] * M_PI / (m_map.rows() - 1);
+
+		BoundingBox3f bb = m_shape->getBoundingBox();
+		float r = ((bb.getCenter() - bb.getCorner(1)).norm()) / std::sqrt(2);
+
+		p[0] = std::cos(ro) * std::cos(phi) * r;
+		p[1] = std::sin(ro) * std::cos(phi) * r;
+		p[2] = std::sin(phi) * r;
+	}
+
+	void pointToIndex(Point3f point, Point2f &idx) const {
+		//float r = (m_shape->getCentroid(0) - point).norm();
+		BoundingBox3f bb = m_shape->getBoundingBox();
+		float r = ((bb.getCenter() - bb.getCorner(1)).norm()) / std::sqrt(2);
+		float ro = acos(point.z() / r);
+		float phi = atan2(point.y(), point.x());
+
+		float col = (0.5f + phi / (2 * M_PI)) * (m_map.cols() - 1); // -PI PI -> 0 cols-1
+		float row = (ro / M_PI) * (m_map.rows() - 1); // 0 PI -> 0 rows-1
+
+		idx[0] = row;
+		idx[1] = col;
 	}
 
 	void saveFloatMap(FloatMap map) {
