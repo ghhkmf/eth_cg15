@@ -7,13 +7,11 @@
 #include <nori/shape.h>
 #include <iostream>
 
-
 NORI_NAMESPACE_BEGIN
 
 class EnvMapLight: public Emitter {
 public:
 	typedef Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> FloatMap;
-	typedef Eigen::Array<float, Eigen::Dynamic, 1> FloatArray;
 
 	EnvMapLight(const PropertyList &propList) {
 		/* Load exr file */
@@ -24,17 +22,17 @@ public:
 		if (is.fail())
 			throw NoriException("Unable to open OBJ file \"%s\"!", filename);
 		m_map = Bitmap(filename.str());
-		m_intensity_map = rgb2gray(m_map);
 
 		/* Maps for PDF and CDF*/
-		m_conditionalPDF_map = FloatMap(m_map.outerSize(), m_map.innerSize());
-		m_conditionalCDF_map = FloatMap(m_map.outerSize(),
-				m_map.innerSize() + 1);
+		m_conditionalPDF_map = FloatMap(m_map.rows(), m_map.cols());
+		m_conditionalCDF_map = FloatMap(m_map.rows(), m_map.cols() + 1);
 
-		m_marginalPDF_map = FloatArray(m_map.outerSize());
-		m_marginalCDF_map = FloatArray(m_map.outerSize() + 1);
+		m_marginalPDF_array = FloatMap(1, m_map.rows());
+		m_marginalCDF_array = FloatMap(1, m_map.rows() + 1);
 
-	//	preprocessIntensityMap();
+		preprocessIntensityMap();
+
+	//	saveFloatMap(m_conditionalCDF_map);
 	}
 
 	FloatMap rgb2gray(Bitmap map) {
@@ -54,44 +52,24 @@ public:
 	 */
 
 	void preprocessIntensityMap() {
-		int numRows = m_map.outerSize();
-		int numCols = m_map.innerSize();
+		int numRows = m_map.rows();
+		int numCols = m_map.cols();
 
-		FloatArray colsum(numRows);
+		FloatMap m_intensity_map = rgb2gray(m_map);
 
+		FloatMap colsum(1, numRows);
 		for (int u = 0; u < numRows; u++) { //Over rows
-			precompute1D(u, numCols, m_intensity_map, m_conditionalPDF_map,
-					m_conditionalCDF_map);
-			for (int j = 0; j < numCols; j++) {
-				colsum(u) += m_intensity_map(u, j);
-			}
+			colsum(0,u) = precompute1D(u, numCols, m_intensity_map,
+					m_conditionalPDF_map, m_conditionalCDF_map);
 		}
-		precompute1DArray(numCols, colsum, m_marginalPDF_map,
-				m_marginalCDF_map);
+		precompute1D(0, numRows, colsum, m_marginalPDF_array,
+				m_marginalCDF_array);
 	}
 
-	void precompute1DArray(const int colTotalNum, FloatArray &values,
-			FloatArray &pdf, FloatArray &cdf) {
+	float precompute1D(const int rowNum, const int colTotalNum,
+			FloatMap &values, FloatMap &pdf, FloatMap &cdf) {
 
-		int I = 0;
-		for (int i = 0; i < colTotalNum; i++) {
-			I += values(i);
-		}
-
-		for (int i = 0; i < colTotalNum; i++) {
-			pdf(i) = values(i) / I;
-		}
-		cdf(0) = 0;
-		for (int i = 1; i < colTotalNum; i++) {
-			cdf(i) = cdf(i - 1) + pdf(i - 1);
-		}
-		cdf(colTotalNum) = 1;
-	}
-
-	void precompute1D(const int rowNum, const int colTotalNum, FloatMap &values,
-			FloatMap &pdf, FloatMap &cdf) {
-
-		int I = 0;
+		float I = 0;
 		for (int i = 0; i < colTotalNum; i++) {
 			I += values(rowNum, i);
 		}
@@ -99,11 +77,13 @@ public:
 		for (int i = 0; i < colTotalNum; i++) {
 			pdf(rowNum, i) = values(rowNum, i) / I;
 		}
-		cdf(0) = 0;
+		cdf(0, rowNum) = 0;
 		for (int i = 1; i < colTotalNum; i++) {
 			cdf(rowNum, i) = cdf(rowNum, i - 1) + pdf(rowNum, i - 1);
 		}
 		cdf(rowNum, colTotalNum) = 1;
+		return I;
+
 	}
 
 	Color3f sample(EmitterQueryRecord &lRec, const Point2f &sample) const {
@@ -128,26 +108,33 @@ public:
 		else
 			return Color3f(0.f);
 	}
+
+
+
+
 	Color3f eval(const EmitterQueryRecord &lRec) const {
 
 		if (!m_shape)
 			throw NoriException(
 					"There is no shape attached to this Area light!");
-
-		//float cos_theta_i = lRec.n.dot(-lRec.wi);
-
 		//lRec.p //Sampled point
-		float r=sqrtf(m_shape->getArea()/(4*M_PI));
-		float ro = acos(lRec.p.z()/r);
-		float phi=atan2(lRec.p.y(),lRec.p.x());
+		float r = (m_shape->getCentroid(0) - lRec.p).norm();
+
+		float ro = acos(lRec.p.z() / r);
+		float phi = atan2(lRec.p.y(), lRec.p.x());
 
 		//Map to texture
 
-		float col = (0.5f + phi / (2 * M_PI))*(m_map.innerSize()-1); // -Pi PI - s_cord[0]
-		float row = (ro / M_PI)*(m_map.outerSize()-1); // 0 Pi - s_cord[1]
+		float col = (0.5f + phi / (2 * M_PI)) * (m_map.cols() - 1); // -PI PI -> 0 cols-1
+		float row = (ro / M_PI) * (m_map.rows() - 1); // 0 PI -> 0 rows-1
 
-		return m_map(row,col);
+		return m_map(row, col);
 	}
+
+
+
+
+
 	float pdf(const EmitterQueryRecord &lRec) const {
 		/*Uniform sampling over shape - SPHERE*/
 		if (!m_shape)
@@ -166,22 +153,44 @@ public:
 	std::string toString() const {
 		return tfm::format("EnvironmentalMapLight["
 				" MapSize = \"%s %s\" \n"
-				" IntMapSize = \"%s %s\" \n"
-				" ] ", m_map.outerSize(), m_map.innerSize(),
-				m_intensity_map.outerSize(), m_intensity_map.innerSize());
+				" ] ", m_map.outerSize(), m_map.innerSize());
+	}
+
+
+
+
+
+
+
+
+
+	void saveFloatMap(FloatMap map) {
+		int numCols = map.cols();
+		int numRows = map.rows();
+
+		Bitmap m(Vector2i(numCols, numRows)); //Invert to match size
+
+		for (int r = 0; r < numRows; r++) {
+			for (int c = 0; c < numCols; c++) {
+				m(r, c) = Color3f(map(r, c)*200);
+			}
+		}
+
+		filesystem::path filename2 = getFileResolver()->resolve("test.exr"); // For controlling
+
+		m.save(filename2.str());
 	}
 
 protected:
 	//Point3f m_position;
 //	Color3f m_power;
 	Bitmap m_map;
-	FloatMap m_intensity_map;
 
 	FloatMap m_conditionalPDF_map;
 	FloatMap m_conditionalCDF_map;
 
-	FloatArray m_marginalPDF_map;
-	FloatArray m_marginalCDF_map;
+	FloatMap m_marginalPDF_array; //rows=1 //element at (1,X) is marginal(Row x in Map)
+	FloatMap m_marginalCDF_array; // rows=1
 
 };
 

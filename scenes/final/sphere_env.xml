@@ -10,7 +10,8 @@
 	<!-- Environment Map -->
 	<mesh type="sphere">
 		<point name="center" value="0,0,1"/>
-		<float name="radius" value="10000"/>
+		<float name="radius" value="10000"/> 
+		<!-- radius not bigger than 10000 otherwise black -->
 		<emitter type="env_map">
 			<string  name="filename" value="rnl.exr"/>
 		</emitter>
@@ -38,6 +39,7 @@
 	</mesh>
 
 	<!-- Ground plane -->
+	<!--
 	<mesh type="obj">
 		<string name="filename" value="plane.obj"/>
 
@@ -52,6 +54,6 @@
 		</transform>
 
 	</mesh>
-
+	-->
 
 </scene>

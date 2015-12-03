@@ -21,9 +21,10 @@ public:
 		Intersection its;
 
 		// If not visible return black
-		if (!scene->rayIntersect(ray, its))
-			return Color3f(0.0f);
-
+		if (!scene->rayIntersect(ray, its)){
+			/*This should never happen if there is a environmental Map*/
+			return Color3f(0.3f);
+		}
 		//Get Le
 		Color3f Le = Color3f(0.0f);
 		const Emitter* emi2 = its.mesh->getEmitter();
