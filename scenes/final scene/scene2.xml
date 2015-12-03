@@ -56,6 +56,8 @@
 	</emitter>
 
 
+
+
 	<!-- Walls -->
 	<mesh type="obj">
 		<string name="filename" value="rightWall.obj"/>
@@ -98,7 +100,7 @@
 	<mesh type="obj">
 		<string name="filename" value="frontWall.obj"/>
 		<bsdf type="diffuse">
-				<texture type="imgTexture_color" name="albedo">
+				<texture type="procedeTexture_color" name="albedo">
 						<point name="delta" value="0.15,0.15"/>
 						<vector name="shift" value="0.3,0.15"/>				
 						<vector name="scale" value="2.2,1.1"/>
@@ -223,7 +225,7 @@
 			<color name="albedo" value="0,0.8,0.1"/>
 		</bsdf>
 	</mesh>
-	<-->
+	
 
 
 	<!--clock-->
