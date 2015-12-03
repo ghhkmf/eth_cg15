@@ -9,6 +9,10 @@
 
 NORI_NAMESPACE_BEGIN
 
+/**
+ * This class is for SPHERE environmal light.
+ * For cube the methods pointToIndex and indexToPint have to be changed
+ */
 class EnvMapLight: public Emitter {
 public:
 	typedef Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> FloatMap;
@@ -32,7 +36,7 @@ public:
 
 		preprocessIntensityMap();
 
-	//	saveFloatMap(m_conditionalCDF_map);
+		//	saveFloatMap(m_conditionalCDF_map);
 	}
 
 	FloatMap rgb2gray(Bitmap map) {
@@ -48,7 +52,7 @@ public:
 	}
 
 	/**
-	 * Calculated the PDF and CDF of the image
+	 * Prepocessing Part - Calculate the PDF and CDF of the image ------------------------------------
 	 */
 
 	void preprocessIntensityMap() {
@@ -59,7 +63,7 @@ public:
 
 		FloatMap colsum(1, numRows);
 		for (int u = 0; u < numRows; u++) { //Over rows
-			colsum(0,u) = precompute1D(u, numCols, m_intensity_map,
+			colsum(0, u) = precompute1D(u, numCols, m_intensity_map,
 					m_conditionalPDF_map, m_conditionalCDF_map);
 		}
 		precompute1D(0, numRows, colsum, m_marginalPDF_array,
@@ -86,6 +90,10 @@ public:
 
 	}
 
+	/**
+	 * Sampling Part ------------------------------------------------------------------------------
+	 */
+
 	Color3f sample(EmitterQueryRecord &lRec, const Point2f &sample) const {
 		/*Uniform sampling over shape - SPHERE*/
 
@@ -109,31 +117,63 @@ public:
 			return Color3f(0.f);
 	}
 
+	/**
+	 * Return index of approximation
+	 */
+	int sample1D(int rowNum, FloatMap pdf, FloatMap cdf, float sample) {
 
+		int index = -1;
+		//Linear search for index
+		for (int var = 1; var < cdf.cols(); ++var) {
+			if (cdf(rowNum, var) > sample) {
+				index = var - 1;
+				break;
+			}
+		}
+		if (index == -1) {
+			cout << "ERROR INDEX -1" << endl;
+		}
+		return index;
+	}
 
+	void indexToPoint(Point2f indexes, Point3f &p) {
+
+		float phi = 2*M_PI*((indexes[1]/(m_map.cols()-1))-0.5f);
+		float ro = indexes[0]*M_PI/(m_map.rows()-1);
+
+		BoundingBox3f bb = m_shape->getBoundingBox();
+		float r = ((bb.getCenter()-bb.getCorner(1)).norm())/std::sqrt(2);
+
+		p[0] = std::cos(ro) * std::cos(phi) * r;
+		p[1] = std::sin(ro) * std::cos(phi) * r;
+		p[2] = std::sin(phi) * r;
+	}
+
+	void pointToIndex(Point3f point, Point2f &idx) const{
+		//float r = (m_shape->getCentroid(0) - point).norm();
+		BoundingBox3f bb = m_shape->getBoundingBox();
+		float r = ((bb.getCenter()-bb.getCorner(1)).norm())/std::sqrt(2);
+		float ro = acos(point.z() / r);
+		float phi = atan2(point.y(), point.x());
+
+		float col = (0.5f + phi / (2 * M_PI)) * (m_map.cols() - 1); // -PI PI -> 0 cols-1
+		float row = (ro / M_PI) * (m_map.rows() - 1); // 0 PI -> 0 rows-1
+
+		idx[0]=row;
+		idx[1]=col;
+	}
 
 	Color3f eval(const EmitterQueryRecord &lRec) const {
 
 		if (!m_shape)
 			throw NoriException(
 					"There is no shape attached to this Area light!");
-		//lRec.p //Sampled point
-		float r = (m_shape->getCentroid(0) - lRec.p).norm();
 
-		float ro = acos(lRec.p.z() / r);
-		float phi = atan2(lRec.p.y(), lRec.p.x());
+		Point2f indexes(0,0);
+		pointToIndex(lRec.p,indexes);
 
-		//Map to texture
-
-		float col = (0.5f + phi / (2 * M_PI)) * (m_map.cols() - 1); // -PI PI -> 0 cols-1
-		float row = (ro / M_PI) * (m_map.rows() - 1); // 0 PI -> 0 rows-1
-
-		return m_map(row, col);
+		return m_map(indexes.x(), indexes.y()); // row - col
 	}
-
-
-
-
 
 	float pdf(const EmitterQueryRecord &lRec) const {
 		/*Uniform sampling over shape - SPHERE*/
@@ -156,14 +196,6 @@ public:
 				" ] ", m_map.outerSize(), m_map.innerSize());
 	}
 
-
-
-
-
-
-
-
-
 	void saveFloatMap(FloatMap map) {
 		int numCols = map.cols();
 		int numRows = map.rows();
@@ -172,7 +204,7 @@ public:
 
 		for (int r = 0; r < numRows; r++) {
 			for (int c = 0; c < numCols; c++) {
-				m(r, c) = Color3f(map(r, c)*200);
+				m(r, c) = Color3f(map(r, c) * 200);
 			}
 		}
 
