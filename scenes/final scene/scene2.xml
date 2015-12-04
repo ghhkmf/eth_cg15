@@ -8,8 +8,8 @@
 	<!-->
 	<integrator type="path_mats">
 	</integrator>
-	
 	<-->
+	
 	<integrator type="photonmapper">
 		<float name="photonRadius" value="0.08"/>
 		<integer name="photonCount" value="300000"/>
@@ -97,6 +97,7 @@
 			<color name="albedo" value=".95,.95,.95"/>
 		</bsdf>
 	</mesh>	
+	
 	<mesh type="obj">
 		<string name="filename" value="frontWall.obj"/>
 		<bsdf type="diffuse">
@@ -187,6 +188,17 @@
 		<bsdf type="dielectric">
 			<float name="extIOR" value="1"/>
 			<float name="intIOR" value="1.5"/>
+		</bsdf>
+	</mesh>
+
+	<mesh type="sphere">
+		<point name="center" value="1.4988,3,0"/>
+		<float name="radius" value="1"/>
+		<bsdf type="anisotropic">
+			<color name="kd" value="0.8, .8, 0.8"/>
+			<float name="alpha" value="0.005"/>
+			<float name="ex" value = "10"/>
+			<float name="ey" value = "20"/>
 		</bsdf>
 	</mesh>
 

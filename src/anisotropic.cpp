@@ -25,8 +25,8 @@ NORI_NAMESPACE_BEGIN
 class Anisotropic: public BSDF {
 public:
 	Anisotropic(const PropertyList &propList) {
-		ex = propList.getFloat("ex", 0.1f);
-		ey = propList.getFloat("ey", 0.1f);
+		ex = propList.getFloat("ex", 1.0f);
+		ey = propList.getFloat("ey", 1.0f);
 
 		/* RMS surface roughness */
 		m_alpha = propList.getFloat("alpha", 0.1f);
@@ -116,15 +116,19 @@ public:
 		}
 
 		Normal3f wh = (bRec.wi + bRec.wo).normalized();
+		float costhetah = abs(wh.z());
+		float ds = 1.0f - costhetah*costhetah;
+		float anisoPdf = 0.0f;
+		if (ds > 0.0f && bRec.wi.dot(wh) > 0.0f) {
+			float e = (ex*wh.x()*wh.x() + ey*wh.y()*wh.y()) / ds;
+			float d = sqrtf((ex + 1.0f) * (ey + 1.0f))*INV_TWOPI * powf(costhetah, e);
+			anisoPdf = d / (4.0f*bRec.wi.dot(wh));
+		}
 
-		float Dh = evalAnisotropic(wh);
-
-		float cos_theta_h = Frame::cosTheta(wh);
-		float cos_theta_o = Frame::cosTheta(bRec.wo);
-
-		float J = 1 / (4 * wh.dot(bRec.wo));
-
-		return m_ks * Dh * cos_theta_h * J + (1 - m_ks) * cos_theta_o / M_PI;
+		return anisoPdf;
+	}
+	virtual bool sameHemisphere(Vector3f w, Vector3f wp) const{
+		return w.z()*wp.z() > 0.0f;
 	}
 
 	/// Sample the BRDF
@@ -136,7 +140,7 @@ public:
 		float u1 = sample.x();float u2 = sample.y();
 		float costheta;
 		float phi;
-
+		////////////////
 		//sample from first quadrant and remap to hemisphere to sample wh
 		if (u1 < .25f) {
 			sampleFirstQuadrant(4.0f*u1, u2, phi, costheta);
@@ -155,6 +159,12 @@ public:
 			sampleFirstQuadrant(u1, u2, phi, costheta);
 			phi = 2.0f*M_PI - phi;
 		}
+		float sintheta = sqrtf(std::max(0.0f, 1.0f - costheta*costheta));
+		Vector3f wh(sintheta*cosf(phi),sintheta*sinf(phi),costheta);
+		//mirror wh if not same sphere as wi
+		if (!sameHemisphere(bRec.wi, wh)) wh = -wh;
+
+		///////////////
 		//compute incident direction by reflecting about wh
 		bRec.wo = -bRec.wi + 2.0f*bRec.wo.dot(wh)*wh;
 
