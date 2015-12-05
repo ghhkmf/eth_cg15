@@ -95,26 +95,25 @@ public:
 
 		Normal3f wh = (bRec.wi + bRec.wo).normalized();
 
-		float Dh = evalAnisotropic(wh);
+		float Dh = evalAnisotropic(wh); //cout << "Dh " << Dh << " ";
 		float F = fresnel(wh.dot(bRec.wi), m_extIOR, m_intIOR);
 		float G = smithBeckmannG1(bRec.wi, wh) * smithBeckmannG1(bRec.wo, wh);
-
+		
 		float cos2 = cos_theta_i * cos_theta_o;
 		if (cos2 < 0) {
 			cos2 = -cos2;
 		}
-
+		//return m_kd / M_PI + m_ks * (Dh * F ) / (4.f * wh.dot(bRec.wi));
 		return m_kd / M_PI + m_ks * (Dh * F * G) / (4.f * cos2);
 
 	}
 	/// Evaluate the sampling density of \ref sample() wrt. solid angles
 	virtual float pdf(const BSDFQueryRecord &bRec) const override {
-
+		//cout << "costheta" << bRec.wo.z()<<" ";
 		if (bRec.measure != ESolidAngle || Frame::cosTheta(bRec.wi) <= 0
 				|| Frame::cosTheta(bRec.wo) <= 0) {
 			return 0.0f;
 		}
-
 		Normal3f wh = (bRec.wi + bRec.wo).normalized();
 		float costhetah = abs(wh.z());
 		float ds = 1.0f - costhetah*costhetah;
@@ -146,6 +145,7 @@ public:
 			sampleFirstQuadrant(4.0f*u1, u2, phi, costheta);
 		}
 		else if (u1 < 0.5f) {
+			u1 = 4.0f*(.5f - u1);
 			sampleFirstQuadrant(u1, u2, phi, costheta);
 			phi = M_PI - phi;
 		}
@@ -166,10 +166,9 @@ public:
 
 		///////////////
 		//compute incident direction by reflecting about wh
-		bRec.wo = -bRec.wi + 2.0f*bRec.wo.dot(wh)*wh;
-
+		bRec.wo = -bRec.wi + 2.0f*bRec.wi.dot(wh)*wh;
 		if (pdf(bRec) > 0)
-			return eval(bRec) / pdf(bRec) * Frame::cosTheta(bRec.wo);
+			return eval(bRec) / pdf(bRec);// *Frame::cosTheta(bRec.wo);
 		else
 			return Color3f(0.f);
 	}
@@ -180,10 +179,10 @@ public:
 		}
 		else {
 			phi = atanf(sqrtf((ex + 1.0f) / (ey + 1.0f)) * tanf(M_PI * u1 * 0.5f));
-			float cosphi = cosf(phi);
-			float sinphi = sinf(phi);
-			costheta = powf(u2, 1.0f / (ex*cosphi*cosphi + ey*sinphi*sinphi + 1));
 		}
+		float cosphi = cosf(phi);
+		float sinphi = sinf(phi);
+		costheta = powf(u2, 1.0f / (ex*cosphi*cosphi + ey*sinphi*sinphi + 1));
 	}
 
 	virtual std::string toString() const override {
