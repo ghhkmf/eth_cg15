@@ -31,10 +31,6 @@
 			<string name="filename" value="rnl.exr"/>
 		</emitter>
 
-		<medium type="homogen">
-			<float name="sigma_a" value="0.1"/>
-			<float name="sigma_s" value="0.3"/>	
-		</medium>
 	</mesh>
 
 	<!-- Create an analytic sphere -->
@@ -42,6 +38,13 @@
 		<point name="center" value="0,0,1"/>
 		<float name="radius" value="1.5"/>
 		<bsdf type="mirror" />
+
+		
+<!--		<medium type="homogen">
+			<float name="sigma_a" value="0.1"/>
+			<float name="sigma_s" value="0.3"/>	
+		</medium>
+ -->
 	</mesh>
 
 	<!-- Ground plane -->

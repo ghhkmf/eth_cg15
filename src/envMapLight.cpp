@@ -156,8 +156,40 @@ public:
 		Point2f indexes(0, 0);
 		pointToIndex(lRec.p, indexes);
 
-		return m_map(indexes.x(), indexes.y()); // row - col
+
+		Color3f result;
+		bilinearInterpolation(indexes,result);
+		return result;
 	}
+
+	/*
+	 * Bilinear interpolation of pixels
+	 */
+	void bilinearInterpolation(Point2f idxs, Color3f& res) const{
+
+		int x_bot = idxs.x();
+		int y_bot = idxs.y();
+		int x_up = (idxs.x()==(float)x_bot)?x_bot:x_bot+1;
+		int y_up = (idxs.y()==(float)y_bot)?y_bot:y_bot+1;
+
+		float x2_x = (((float) x_up)-idxs.x());
+		float x_x1 = (idxs.x()-((float) x_bot));
+
+
+		Color3f R1 =  (x2_x)*m_map(x_bot,y_bot) + ((x_x1))*m_map(x_up,y_bot);
+		Color3f R2 = (x2_x)*m_map(x_bot,y_up) + (x_x1)*m_map(x_up,y_up);
+
+		float y_y1=idxs.y()-((float)y_bot);
+		float y2_y=((float)y_up)-idxs.y();
+
+		Color3f r((y2_y)*R1 + (y_y1)*R2);
+
+		res[0] =r.x();
+		res[1] = r.y();
+		res[2]=r.z();
+	}
+
+
 
 	float pdf(const EmitterQueryRecord &lRec) const {
 		/*Uniform sampling over shape - SPHERE*/
@@ -171,6 +203,9 @@ public:
 		return m_marginalPDF_array(0, idxs.x())
 				* m_conditionalPDF_map(idxs.x(), idxs.y());
 	}
+
+
+
 
 	 // Helper Methods ----------------------------------------------------------------------------------
 
@@ -232,8 +267,8 @@ protected:
 	FloatMap m_conditionalPDF_map;
 	FloatMap m_conditionalCDF_map;
 
-	FloatMap m_marginalPDF_array; //rows=1 //element at (1,X) is marginal(Row x in Map)
-	FloatMap m_marginalCDF_array; // rows=1
+	FloatMap m_marginalPDF_array; //#rows=1 //element at (0,X) is marginal(Row x in Map)
+	FloatMap m_marginalCDF_array; // #rows=1
 
 };
 
