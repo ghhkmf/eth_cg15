@@ -1,6 +1,6 @@
 # Blender v2.76 (sub 0) OBJ File: 'scene merged.blend'
 # www.blender.org
-mtllib lampRod2.mtl
+mtllib LampRod2.mtl
 o lamp3_Cylinder.004
 v 1.500000 2.527498 1.772400
 v 1.500000 3.306921 1.322400
