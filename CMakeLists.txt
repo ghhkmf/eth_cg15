@@ -88,6 +88,7 @@ add_executable(nori
   src/envMapLight.cpp
   src/procedeTexture.cpp
   src/spot.cpp
+  src/anisotropic.cpp
 )
 
 # The following lines build the warping test application

@@ -68,12 +68,11 @@ protected:
 template <>
 ProcedeTexture<float>::ProcedeTexture(const PropertyList &props) {
     m_delta = props.getPoint2("delta", Point2f(0));
-	m_shift = props.getVector2("delta", Vector2f(0));
+	m_shift = props.getVector2("shift", Vector2f(0));
     m_scale = props.getVector2("scale", Vector2f(1));
 	points = props.getFloat("points", 0.f);
 	stripes = props.getFloat("stripes", 1.f);
 	back = props.getFloat("back", 1.f);
-	filename = props.getString("filename");
 }
 
 template <>
@@ -84,7 +83,6 @@ ProcedeTexture<Color3f>::ProcedeTexture(const PropertyList &props) {
 	points = props.getColor("points", Color3f(0));
 	stripes = props.getColor("stripes", Color3f(1));
 	back = props.getColor("back", Color3f(1));
-	filename = props.getString("filename");
 }
 
 

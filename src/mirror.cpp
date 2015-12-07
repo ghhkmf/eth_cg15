@@ -24,7 +24,9 @@ NORI_NAMESPACE_BEGIN
 /// Ideal mirror BRDF
 class Mirror : public BSDF {
 public:
-    Mirror(const PropertyList &) { }
+    Mirror(const PropertyList &propList) {
+		color = propList.getColor("color", 1.0f);
+	}
 
     virtual Color3f eval(const BSDFQueryRecord &) const override {
         /* Discrete BRDFs always evaluate to zero in Nori */
@@ -51,12 +53,15 @@ public:
         /* Relative index of refraction: no change */
         bRec.eta = 1.0f;
 
-        return Color3f(1.0f);
+        return color;
     }
 
     virtual std::string toString() const override {
         return "Mirror[]";
     }
+private:
+	Color3f color;
+
 };
 
 NORI_REGISTER_CLASS(Mirror, "mirror");

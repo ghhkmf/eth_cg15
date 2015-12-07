@@ -1,31 +1,31 @@
 <scene>
 	<!-- Independent sample generator, user-selected samples per pixel -->
 	<sampler type="independent">
-		<integer name="sampleCount" value="128"/>
+		<integer name="sampleCount" value="256"/>
 	</sampler>
 
 	<!-- Use the average visibility integrator -->
 	<!-->
 	<integrator type="path_mats">
 	</integrator>
-	
 	<-->
+	
 	<integrator type="photonmapper">
 		<float name="photonRadius" value="0.08"/>
-		<integer name="photonCount" value="300000"/>
+		<integer name="photonCount" value="1000000"/>
 	</integrator>
 	
 
 	<!-- Render the scene as viewed by a perspective camera -->
 	<camera type="perspective">
 		<transform name="toWorld">
-			<lookat target="1, 2.5, -1.2" 
-			        origin="6.5,2.7, 0"  
+			<lookat target="1, 2.8, -1.2" 
+			        origin="7.5,3, 0" 
 			        up="0, 1, 0"/>
 			        <!-->
 			        x:zoom,y:up,z:left,right
-			        target="1, 2, 0" 
-			        origin="4.2,3, 2.5"  
+			        target="1, 2.5, -1.2" 
+			        origin="6.5,2.7, 0"  
 			        <-->
 		</transform>
 
@@ -39,13 +39,18 @@
 
 
 	<!-- emitters-->
-
 	<mesh type="obj">
-		<string name="filename" value="emitter.obj"/>
+		<string name="filename" value="emitterRight.obj"/>
 		<emitter type="area">
-			<color name="radiance" value="8,8,8"/>
+			<color name="radiance" value="10,10,10"/>
 		</emitter>
-	</mesh>
+	</mesh>	
+	<mesh type="obj">
+		<string name="filename" value="emitterLeft.obj"/>
+		<emitter type="area">
+			<color name="radiance" value="10,10,10"/>
+		</emitter>
+	</mesh>	
 
 	<emitter type="spot">
 		<point name="position" value = "1.5,3.12894,1.33235"/>
@@ -54,7 +59,6 @@
 		<float name="cosTotalWidth" value=".4"/>
 		<vector name="direction" value = "-.0012,-.6448,-2.1935"/>
 	</emitter>
-
 
 
 
@@ -86,7 +90,7 @@
 	<mesh type="obj">
 		<string name="filename" value="floor.obj"/>
 		<bsdf type="diffuse">
-			<color name="albedo" value=".3,.1,0"/>
+			<color name="albedo" value=".04,.04,.04"/>
 		</bsdf>
 	</mesh>
 
@@ -97,6 +101,7 @@
 			<color name="albedo" value=".95,.95,.95"/>
 		</bsdf>
 	</mesh>	
+	
 	<mesh type="obj">
 		<string name="filename" value="frontWall.obj"/>
 		<bsdf type="diffuse">
@@ -109,78 +114,104 @@
 						<color name="back" value="1,.9,.6"/>
 				</texture>
 		</bsdf>
+	</mesh>
+
+	<mesh type="obj">
+		<string name="filename" value="LampRodLeft.obj"/>
+		<bsdf type="mirror">
+			<color name="color" value=".5,.2,.1"/>
+		</bsdf>
 	</mesh>	
 
+	<mesh type="obj">
+		<string name="filename" value="LampRodRight.obj"/>
+		<bsdf type="mirror">
+			<color name="color" value=".5,.2,.1"/>
+		</bsdf>
+	</mesh>	
 
+	<mesh type="obj">
+		<string name="filename" value="topLampLeft.obj"/>
+		<bsdf type="mirror">
+			<color name="color" value=".3,.3,.3"/>
+		</bsdf>
+	</mesh>	
+
+	<mesh type="obj">
+		<string name="filename" value="topLampRight.obj"/>
+		<bsdf type="mirror">
+			<color name="color" value=".3,.3,.3"/>
+		</bsdf>
+	</mesh>	
+	
 
 	<!-- Table-->
 	<mesh type="obj">
 		<string name="filename" value="legs.obj"/>
 		<bsdf type="diffuse">
-			<color name="albedo" value="0.5,.3,0"/>
+			<color name="albedo" value="0.5,.2,0.1"/>
 		</bsdf>
 	</mesh>
 
 	<mesh type="obj">
 		<string name="filename" value="table.obj"/>		
-		<bsdf type="microfacet">
-			<color name="kd" value="0.5, .2, 0.1"/>
-			<float name="alpha" value="0.005"/>
+		<bsdf type="anisotropic">
+				<color name="kd" value="0, 0, 0"/>
+				<float name="alpha" value="0.1"/>
+				<float name="ex" value = "5"/>
+				<float name="ey" value = "5"/>
 		</bsdf>
 	</mesh>
 
-	<mesh type="obj">
-		<string name="filename" value="paper.obj"/>
-		<bsdf type="microfacet">
-			<color name="kd" value="0.9, .9, 0.9"/>
-			<float name="alpha" value="0.005"/>
-		</bsdf>
-	</mesh>
-
-
+	
 
 	<!-- lamp-->
 	<mesh type="obj">
 		<string name="filename" value="lampBase.obj"/>
-
 		<bsdf type="mirror">
-			<color name="albedo" value=".8,.8,.8"/>
+				
 		</bsdf>
 	</mesh>
 
 	<mesh type="obj">
 		<string name="filename" value="lampRod1.obj"/>
-
 		<bsdf type="mirror">
-			<color name="albedo" value=".8,.8,.8"/>
 		</bsdf>
 	</mesh>
 
 	<mesh type="obj">
 		<string name="filename" value="lampRod2.obj"/>
-
 		<bsdf type="mirror">
-			<color name="albedo" value=".8,.8,.8"/>
 		</bsdf>
 	</mesh>
-		<mesh type="obj">
-		<string name="filename" value="bulbHolder.obj"/>
 
+	<mesh type="obj">
+		<string name="filename" value="bulbHolder.obj"/>
 		<bsdf type="mirror">
-			<color name="albedo" value=".8,.8,.8"/>
 		</bsdf>
 	</mesh>	
+	
+	<mesh type="obj">
+		<string name="filename" value="bulbHolderInside.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".95,.95,.95"/>
+		</bsdf>
+	</mesh>
+
 
 	<!-- aquarium-->	
 
 	<mesh type="obj">
 		<string name="filename" value="sphereHolder.obj"/>
-
-		<bsdf type="diffuse">
-			<color name="albedo" value=".01,.01,.9"/>
+		<bsdf type="anisotropic">
+				<color name="kd" value="0., 0.0, .5"/>
+				<float name="alpha" value="0.1"/>
+				<float name="ex" value = "5"/>
+				<float name="ey" value = "1000"/>
 		</bsdf>
 	</mesh>
-	
+	<!--air glass interface-->
 	<mesh type="sphere">
 		<point name="center" value="1.4988,2.48416,-0.86119"/>
 		<float name="radius" value=".995288"/>
@@ -189,17 +220,16 @@
 			<float name="intIOR" value="1.5"/>
 		</bsdf>
 	</mesh>
-
-<!-->	
-	<mesh type="obj">
-		<string name="filename" value="outerSphere.obj"/>
-
+	<!--water glass interface-->
+	<mesh type="sphere">
+		<point name="center" value="1.4988,2.48416,-0.86119"/>
+		<float name="radius" value=".95"/>
 		<bsdf type="dielectric">
-			<float name="extIOR" value="1"/>
-			<float name="intIOR" value="1.5"/>
+			<float name="extIOR" value="1.5"/>
+			<float name="intIOR" value="1.33"/>
 		</bsdf>
 	</mesh>
-<-->
+
 	<!-->
 	<mesh type="obj">
 		<string name="filename" value="stones.obj"/>
@@ -225,42 +255,46 @@
 			<color name="albedo" value="0,0.8,0.1"/>
 		</bsdf>
 	</mesh>
-	
+	<-->
 
 
 	<!--clock-->
 	<mesh type="obj">
 		<string name="filename" value="clock.obj"/>
-
 		<bsdf type="microfacet">
-			<color name="kd" value="0.1, .1, 0.1"/>
-			<float name="alpha" value="0.005"/>
+			<color name="kd" value="0.0, .0, 0.0"/>
+			<float name="alpha" value=".05"/>
 		</bsdf>
 	</mesh>
 
 	<mesh type="obj">
 		<string name="filename" value="hour.obj"/>
-
-		<bsdf type="diffuse">
-			<color name="albedo" value=".9,.7,.1"/>
+		<bsdf type="mirror">
+			<color name="color" value=".5,.4,0"/>
 		</bsdf>
 	</mesh>
 
 	<mesh type="obj">
 		<string name="filename" value="minute.obj"/>
-
-		<bsdf type="diffuse">
-			<color name="albedo" value=".9,.7,.1"/>
+		<bsdf type="mirror">
+			<color name="color" value=".5,.4,0"/>
 		</bsdf>
 	</mesh>
 
 	<mesh type="obj">
 		<string name="filename" value="second.obj"/>
-
 		<bsdf type="diffuse">
 			<color name="albedo" value="1,.05,.05"/>
 		</bsdf>
 	</mesh>	
 
+	<!--vase-->
+	<mesh type="obj">
+		<string name="filename" value="vase.obj"/>
+		<bsdf type="microfacet">
+			<color name="kd" value="0.0, .0, 0.0"/>
+			<float name="alpha" value=".05"/>
+		</bsdf>
+	</mesh>	
 		
 </scene>
