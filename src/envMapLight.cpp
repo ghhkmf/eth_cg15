@@ -6,6 +6,7 @@
 #include <fstream>
 #include <nori/shape.h>
 #include <iostream>
+#include <map>
 
 NORI_NAMESPACE_BEGIN
 
@@ -40,6 +41,12 @@ public:
 		// Calculate Marginal and Conditional Maps
 		cout << "Calculating marginal and conditional maps" << endl;
 		preprocessIntensityMap();
+
+		//Create hash for faster search
+	//	std::map<double, double> map;
+
+
+
 
 		// Use this to plot the maps. Check that the file
 		// "filename2" exists
@@ -89,7 +96,7 @@ public:
 		for (int i = 0; i < colTotalNum; i++) {
 			pdf(rowNum, i) = values(rowNum, i) / I;
 		}
-		cdf(0, rowNum) = 0;
+		cdf(rowNum,0) = 0;
 		for (int i = 1; i < colTotalNum; i++) {
 			cdf(rowNum, i) = cdf(rowNum, i - 1) + pdf(rowNum, i - 1);
 		}
@@ -108,10 +115,12 @@ public:
 
 		int rowSampledIdx = sample1D(0, m_marginalPDF_array,
 				m_marginalCDF_array, (float) sample.x());
+
 		int colSampledIdx = sample1D(rowSampledIdx, m_conditionalPDF_map,
 				m_conditionalCDF_map, (float) sample.y());
 
 		Point2f idxs(rowSampledIdx, colSampledIdx);
+
 		indexToPoint(idxs, lRec.p);
 
 		lRec.pdf = pdf(lRec.p);
@@ -131,20 +140,25 @@ public:
 	 */
 
 	int sample1D(int rowNum, FloatMap pdf, FloatMap cdf, float sample) const {
+		return binarySearch(cdf,rowNum,(int)cdf.cols(),sample);
+	}
 
-		int index = -1;
-		//Linear search for index
-		for (int var = 1; var < cdf.cols(); ++var) {
-			if (cdf(rowNum, var) > sample) {
-				index = var - 1;
-				break;
+	int binarySearch(FloatMap cdf,int rowNum, int size, float sample)const {
+		int start = 1;
+		int end = size;
+		int mid = (start + end) / 2;
+
+		while (start <= end && cdf(rowNum,mid) != sample) {
+			if (cdf(rowNum,mid) <= sample) {
+				start = mid+1;
+			} else {
+				end = mid-1;
 			}
-		}
-		if (index == -1) {
-			cout << "ERROR INDEX -1. Setting it to zero" << endl;
-			index = 0;
-		}
-		return index;
+			mid = (start + end) / 2;
+		} // While Loop End
+
+		return mid;
+
 	}
 
 	Color3f eval(const EmitterQueryRecord &lRec) const {
@@ -156,40 +170,38 @@ public:
 		Point2f indexes(0, 0);
 		pointToIndex(lRec.p, indexes);
 
-
 		Color3f result;
-		bilinearInterpolation(indexes,result);
+		bilinearInterpolation(indexes, result);
+		//	cout << lRec.ref.x()<<" ";
 		return result;
 	}
 
 	/*
 	 * Bilinear interpolation of pixels
 	 */
-	void bilinearInterpolation(Point2f idxs, Color3f& res) const{
+	void bilinearInterpolation(Point2f idxs, Color3f& res) const {
 
 		int x_bot = idxs.x();
 		int y_bot = idxs.y();
-		int x_up = (idxs.x()==(float)x_bot)?x_bot:x_bot+1;
-		int y_up = (idxs.y()==(float)y_bot)?y_bot:y_bot+1;
+		int x_up = (idxs.x() == (float) x_bot) ? x_bot : x_bot + 1;
+		int y_up = (idxs.y() == (float) y_bot) ? y_bot : y_bot + 1;
 
-		float x2_x = (((float) x_up)-idxs.x());
-		float x_x1 = (idxs.x()-((float) x_bot));
+		float x2_x = (((float) x_up) - idxs.x());
+		float x_x1 = (idxs.x() - ((float) x_bot));
 
+		Color3f R1 = (x2_x) * m_map(x_bot, y_bot)
+				+ ((x_x1)) * m_map(x_up, y_bot);
+		Color3f R2 = (x2_x) * m_map(x_bot, y_up) + (x_x1) * m_map(x_up, y_up);
 
-		Color3f R1 =  (x2_x)*m_map(x_bot,y_bot) + ((x_x1))*m_map(x_up,y_bot);
-		Color3f R2 = (x2_x)*m_map(x_bot,y_up) + (x_x1)*m_map(x_up,y_up);
+		float y_y1 = idxs.y() - ((float) y_bot);
+		float y2_y = ((float) y_up) - idxs.y();
 
-		float y_y1=idxs.y()-((float)y_bot);
-		float y2_y=((float)y_up)-idxs.y();
+		Color3f r((y2_y) * R1 + (y_y1) * R2);
 
-		Color3f r((y2_y)*R1 + (y_y1)*R2);
-
-		res[0] =r.x();
+		res[0] = r.x();
 		res[1] = r.y();
-		res[2]=r.z();
+		res[2] = r.z();
 	}
-
-
 
 	float pdf(const EmitterQueryRecord &lRec) const {
 		/*Uniform sampling over shape - SPHERE*/
@@ -204,10 +216,7 @@ public:
 				* m_conditionalPDF_map(idxs.x(), idxs.y());
 	}
 
-
-
-
-	 // Helper Methods ----------------------------------------------------------------------------------
+	// Helper Methods ----------------------------------------------------------------------------------
 
 	std::string toString() const {
 		return tfm::format("EnvironmentalMapLight["
@@ -269,7 +278,6 @@ protected:
 
 	FloatMap m_marginalPDF_array; //#rows=1 //element at (0,X) is marginal(Row x in Map)
 	FloatMap m_marginalCDF_array; // #rows=1
-
 };
 
 NORI_REGISTER_CLASS(EnvMapLight, "env_map");

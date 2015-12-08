@@ -90,7 +90,7 @@ add_executable(nori
   src/imgtexture.cpp
   src/spot.cpp
   src/homogeneousMedium.cpp
-
+  src/translucent.cpp
 )
 
 # The following lines build the warping test application
