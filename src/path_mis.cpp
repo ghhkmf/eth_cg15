@@ -131,7 +131,7 @@ public:
 				float mat_pdf_im = currentBSDFpdf_sDirection;
 
 				w_mat = 1 / (ems_pdf_im + mat_pdf_im);
-				F_mat = Fo * bsdfValToSampledDirection * cos_itsNormal_sDirection;
+				F_mat = Fo * bsdfValToSampledDirection;
 			}else{
 				// Doesnt it doesnt hit an emitter, contribution to Ld is zero
 			}
@@ -142,6 +142,7 @@ public:
 		//Same units------------------------------------------------------------------------------------------------------------------------------------------------------
 
 		Ld = w_em * F_em + w_mat * F_mat;
+		//TODO: Problem: table_path_mis.xml
 
 		//----------------------------------------
 		//	Russian Roulette

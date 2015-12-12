@@ -6,7 +6,8 @@
 #include <fstream>
 #include <nori/shape.h>
 #include <iostream>
-#include <map>
+#include <vector>
+#include <algorithm>
 
 NORI_NAMESPACE_BEGIN
 
@@ -19,7 +20,6 @@ NORI_NAMESPACE_BEGIN
  */
 class EnvMapLight: public Emitter {
 public:
-	typedef Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> FloatMap;
 
 	EnvMapLight(const PropertyList &propList) {
 
@@ -32,21 +32,25 @@ public:
 		m_map = Bitmap(filename.str());
 
 		/* Maps for PDF and CDF*/
-		m_conditionalPDF_map = FloatMap(m_map.rows(), m_map.cols());
-		m_conditionalCDF_map = FloatMap(m_map.rows(), m_map.cols() + 1);
+		m_conditionalPDF_map.resize(m_map.rows());
+		for (int i = 0; i < m_map.rows(); ++i)
+			m_conditionalPDF_map[i].resize(m_map.cols());
 
-		m_marginalPDF_array = FloatMap(1, m_map.rows());
-		m_marginalCDF_array = FloatMap(1, m_map.rows() + 1);
+		m_conditionalCDF_map.resize(m_map.rows());
+		for (int i = 0; i < m_map.rows(); ++i)
+			m_conditionalCDF_map[i].resize(m_map.cols() + 1);
+
+		m_marginalPDF_array.resize(1);
+		m_marginalPDF_array[0].resize(m_map.cols());
+
+		m_marginalCDF_array.resize(1);
+		m_marginalCDF_array[0].resize(m_map.cols() + 1);
 
 		// Calculate Marginal and Conditional Maps
-		cout << "Calculating marginal and conditional maps" << endl;
 		preprocessIntensityMap();
 
 		//Create hash for faster search
-	//	std::map<double, double> map;
-
-
-
+		//	std::map<double, double> map;
 
 		// Use this to plot the maps. Check that the file
 		// "filename2" exists
@@ -56,12 +60,13 @@ public:
 	/*
 	 * Convert the texture into a gray-Intesity map
 	 */
-	FloatMap rgb2gray(Bitmap map) {
-		FloatMap res(map.outerSize(), map.innerSize());
-		for (int row = 0; row < map.outerSize(); row++) {
-			for (int col = 0; col < map.innerSize(); col++) {
+	std::vector<std::vector<float> > rgb2gray(Bitmap map) {
+		std::vector<std::vector<float> > res(map.rows(),
+				std::vector<float>(map.cols()));
+		for (int row = 0; row < map.rows(); row++) {
+			for (int col = 0; col < map.cols(); col++) {
 				Color3f c = map(row, col);
-				res(row, col) = sqrt(
+				res[row][col] = sqrt(
 						(c.r() * c.r() + c.g() * c.g() + c.b() * c.b()) / 3);
 			}
 		}
@@ -76,31 +81,39 @@ public:
 		int numRows = m_map.rows();
 		int numCols = m_map.cols();
 
-		FloatMap m_intensity_map = rgb2gray(m_map);
+		std::vector<std::vector<float> > m_intensity_map = rgb2gray(m_map);
 
-		FloatMap colsum(1, numRows);
+		std::vector<std::vector<float> > colsum(1, std::vector<float>(numRows));
+
 		for (int u = 0; u < numRows; u++) { //Over rows
-			colsum(0, u) = precompute1D(u, numCols, m_intensity_map,
+			colsum[0][u] = precompute1D(u, numCols, m_intensity_map,
 					m_conditionalPDF_map, m_conditionalCDF_map);
 		}
+
 		precompute1D(0, numRows, colsum, m_marginalPDF_array,
 				m_marginalCDF_array);
+
 	}
 
 	float precompute1D(const int rowNum, const int colTotalNum,
-			FloatMap &values, FloatMap &pdf, FloatMap &cdf) {
+			std::vector<std::vector<float> > &values,
+			std::vector<std::vector<float> > &pdf,
+			std::vector<std::vector<float> > &cdf) {
 		float I = 0;
+
 		for (int i = 0; i < colTotalNum; i++) {
-			I += values(rowNum, i);
+			I += values[rowNum][i];
 		}
+
 		for (int i = 0; i < colTotalNum; i++) {
-			pdf(rowNum, i) = values(rowNum, i) / I;
+			pdf[rowNum][i] = values[rowNum][i] / I;
 		}
-		cdf(rowNum,0) = 0;
+
+		cdf[rowNum][0] = 0;
 		for (int i = 1; i < colTotalNum; i++) {
-			cdf(rowNum, i) = cdf(rowNum, i - 1) + pdf(rowNum, i - 1);
+			cdf[rowNum][i] = cdf[rowNum][i - 1] + pdf[rowNum][i - 1];
 		}
-		cdf(rowNum, colTotalNum) = 1;
+		cdf[rowNum][colTotalNum] = 1;
 		return I;
 	}
 
@@ -113,14 +126,14 @@ public:
 			throw NoriException(
 					"There is no shape attached to this Area light!");
 
-	//	int rowSampledIdx = sample1D(0, m_marginalPDF_array,
-	//			m_marginalCDF_array, (float) sample.x());
+			int rowSampledIdx =100;
+			int colSampledIdx =100;
 
-	//	int colSampledIdx = sample1D(rowSampledIdx, m_conditionalPDF_map,
-	//			m_conditionalCDF_map, (float) sample.y());
+		//int rowSampledIdx = sample1D(0, m_marginalPDF_array,
+		//		m_marginalCDF_array, (float) sample.x());
 
-		int rowSampledIdx =1;
-		int colSampledIdx =1;
+		//int colSampledIdx = sample1D(rowSampledIdx, m_conditionalPDF_map,
+		//		m_conditionalCDF_map, (float) sample.y());
 
 		Point2f idxs(rowSampledIdx, colSampledIdx);
 
@@ -142,26 +155,20 @@ public:
 	 * Returns index of sampled element
 	 */
 
-	int sample1D(int rowNum, FloatMap pdf, FloatMap cdf, float sample) const {
-		return binarySearch(cdf,rowNum,(int)cdf.cols(),sample);
+	int sample1D(int rowNum, std::vector<std::vector<float> > pdf,
+			std::vector<std::vector<float> > cdf, float sample) const {
+		return binarySearch(cdf, rowNum, sample);
 	}
 
-	int binarySearch(FloatMap cdf,int rowNum, int size, float sample)const {
-		int start = 1;
-		int end = size;
-		int mid = (start + end) / 2;
-
-		while (start <= end && cdf(rowNum,mid) != sample) {
-			if (cdf(rowNum,mid) <= sample) {
-				start = mid+1;
-			} else {
-				end = mid-1;
-			}
-			mid = (start + end) / 2;
-		} // While Loop End
-
-		return mid;
-
+	int binarySearch(std::vector<std::vector<float> > cdf, int rowNum,
+			float sample) const {
+		auto first = std::lower_bound(cdf[rowNum].begin(), cdf[rowNum].end(),
+				sample);
+		int res = first - cdf[rowNum].begin() - 1;
+		if(res<0)
+			res=0;
+	//	cout << res << endl;
+		return res;
 	}
 
 	Color3f eval(const EmitterQueryRecord &lRec) const {
@@ -215,8 +222,8 @@ public:
 		Point2f idxs;
 		pointToIndex(lRec.p, idxs);
 
-		return m_marginalPDF_array(0, idxs.x())
-				* m_conditionalPDF_map(idxs.x(), idxs.y());
+		return m_marginalPDF_array[0][idxs.x()]
+				* m_conditionalPDF_map[idxs.x()][idxs.y()];
 	}
 
 	// Helper Methods ----------------------------------------------------------------------------------
@@ -224,7 +231,7 @@ public:
 	std::string toString() const {
 		return tfm::format("EnvironmentalMapLight["
 				" MapSize = \"%s %s\" \n"
-				" ] ", m_map.outerSize(), m_map.innerSize());
+				" ] ", m_map.rows(), m_map.cols());
 	}
 
 	void indexToPoint(Point2f indexes, Point3f &p) const {
@@ -253,34 +260,34 @@ public:
 		idx[0] = row;
 		idx[1] = col;
 	}
+	/*
+	 void saveFloatMap(std::vector<std::vector<float> > map) {
+	 int numCols = map.cols();
+	 int numRows = map.rows();
 
-	void saveFloatMap(FloatMap map) {
-		int numCols = map.cols();
-		int numRows = map.rows();
+	 Bitmap m(Vector2i(numCols, numRows)); //Invert to match size
 
-		Bitmap m(Vector2i(numCols, numRows)); //Invert to match size
+	 for (int r = 0; r < numRows; r++) {
+	 for (int c = 0; c < numCols; c++) {
+	 m(r, c) = Color3f(map(r, c) * 200);
+	 }
+	 }
 
-		for (int r = 0; r < numRows; r++) {
-			for (int c = 0; c < numCols; c++) {
-				m(r, c) = Color3f(map(r, c) * 200);
-			}
-		}
+	 filesystem::path filename2 = getFileResolver()->resolve("test.exr"); // For controlling
 
-		filesystem::path filename2 = getFileResolver()->resolve("test.exr"); // For controlling
-
-		m.save(filename2.str());
-	}
-
+	 m.save(filename2.str());
+	 }
+	 */
 protected:
 	//Point3f m_position;
 //	Color3f m_power;
 	Bitmap m_map;
 
-	FloatMap m_conditionalPDF_map;
-	FloatMap m_conditionalCDF_map;
+	std::vector<std::vector<float> > m_conditionalPDF_map;
+	std::vector<std::vector<float> > m_conditionalCDF_map;
 
-	FloatMap m_marginalPDF_array; //#rows=1 //element at (0,X) is marginal(Row x in Map)
-	FloatMap m_marginalCDF_array; // #rows=1
+	std::vector<std::vector<float> > m_marginalPDF_array; //#rows=1 //element at [0][X] is marginal(Row x in Map)
+	std::vector<std::vector<float> > m_marginalCDF_array; // #rows=1
 };
 
 NORI_REGISTER_CLASS(EnvMapLight, "env_map");

@@ -28,13 +28,15 @@ public:
 		color = propList.getColor("color", 1.0f);
 	}
 
-	virtual Color3f eval(const BSDFQueryRecord &) const override {
+	virtual Color3f eval(const BSDFQueryRecord &bRec) const override {
 		/* Discrete BRDFs always evaluate to zero in Nori */
-		return Color3f(0.0f);
+		Vector3f wo = Vector3f(-bRec.wi.x(), -bRec.wi.y(), bRec.wi.z());
+		return wo==bRec.wo?Color3f(1.f):Color3f(0.0f);
 	}
 
 	virtual float pdf(const BSDFQueryRecord &bRec) const override {
-		return 0.f;
+		Vector3f wo = Vector3f(-bRec.wi.x(), -bRec.wi.y(), bRec.wi.z());
+		return wo==bRec.wo?1.f:0.0f;
 	}
 
 	virtual Color3f sample(BSDFQueryRecord &bRec, const Point2f &) const
