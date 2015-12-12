@@ -3,7 +3,7 @@
      after a file by Steve Marschner (CS667) -->
 
 <scene>
-	<integrator type="direct_mis"/>
+	<integrator type="path_mis"/>
 
 	<sampler type="independent">
 		<integer name="sampleCount" value="128"/>

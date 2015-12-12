@@ -79,7 +79,7 @@ public:
 		if (!scene->rayIntersect(currentSampledEmitterQuery.shadowRay)) {
 
 			float cos_itsNormal_sEmitter = std::abs(
-					its.geoFrame.n.dot(
+					its.shFrame.n.dot(
 							currentSampledEmitterQuery.wi.normalized()));
 
 			float ems_pdf_ie = currentSampledEmitter->pdf(
@@ -100,11 +100,11 @@ public:
 		BSDFQueryRecord currentBSDFQueryToSampledDirection(its.toLocal(rayToCam)); //wi Camera, wo sampled ray
 		currentBSDFQueryToSampledDirection.p = its.p;
 
-		currentBSDF->sample(currentBSDFQueryToSampledDirection, sampler->next2D()); //Has cos already in
+		Color3f bsdfVal_cos_pdf=currentBSDF->sample(currentBSDFQueryToSampledDirection, sampler->next2D()); //Has cos already in
 		Color3f bsdfValToSampledDirection = currentBSDF->eval(currentBSDFQueryToSampledDirection); // No pdf
 		//Sampled direction in wo
-
-
+		float cos_itsNormal_sDirection = std::abs(its.shFrame.n.dot(currentBSDFQueryToSampledDirection.wo));
+		float currentBSDFpdf_sDirection = currentBSDF->pdf(currentBSDFQueryToSampledDirection); //WARNING: PDF not in 0-1
 		//Check if intersect with emitter
 		Ray3f nextRay(its.p, its.toWorld(currentBSDFQueryToSampledDirection.wo));
 
@@ -119,17 +119,12 @@ public:
 				//It intersects with light source
 				const Emitter* emi = its_sampledDirection.mesh->getEmitter();
 
-
-
 				EmitterQueryRecord emitterQuerySampledDirection(its.p, its_sampledDirection.p,
 						its_sampledDirection.geoFrame.n);
 				Color3f Fo = emi->eval(emitterQuerySampledDirection);
 
-				float cos_itsNormal_sDirection = std::abs(its.geoFrame.n.dot(emitterQuerySampledDirection.wi));
-
-
 				float ems_pdf_im = emi->pdf(emitterQuerySampledDirection);
-				float mat_pdf_im = currentBSDF->pdf(currentBSDFQueryToSampledDirection);
+				float mat_pdf_im = currentBSDFpdf_sDirection;
 
 				w_mat = 1 / (ems_pdf_im + mat_pdf_im);
 				F_mat = Fo * bsdfValToSampledDirection * cos_itsNormal_sDirection;
@@ -146,18 +141,17 @@ public:
 
 		//----------------------------------------
 		//	Russian Roulette
-
 		Color3f Li(0.f);
 		if (sampler->next1D() > m_q) {
 			Li = this->Li(scene, sampler, nextRay, currentBSDF->isDiffuse())
-					* bsdfValToSampledDirection;
-			if (!isNextEmitter) {
-				return (Le + Ld + Li) / (1 - m_q);
+					*bsdfVal_cos_pdf;
+			if (isNextEmitter) {
+				return (Le + Ld);/// (1 - m_q);
 			} else {
-				return (Le + Li) / (1 - m_q);
+				return (Le + Ld + Li);/// (1 - m_q);
 			}
 		} else {
-			return (Le + Ld) / (1 - m_q);
+			return (Le + Ld);// / (1 - m_q);
 		}
 	}
 
