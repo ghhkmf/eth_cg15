@@ -31,101 +31,113 @@ public:
 
 		//Get Le
 		Color3f Le = Color3f(0.0f);
-		const Emitter* emi2 = its.mesh->getEmitter();
-		if (emi2) {
+		const Emitter* itsEmitter = its.mesh->getEmitter();
+		if (itsEmitter) {
 			//Its an Emitter.
 			EmitterQueryRecord iRec2(ray.o, its.p, its.shFrame.n);
-			Le = emi2->eval(iRec2);
+			Le = itsEmitter->eval(iRec2);
 		}
 
 		// Global constants
-		const BSDF* bsdf = its.mesh->getBSDF();
-		Vector3f toCam = -ray.d.normalized();
+		const BSDF* currentBSDF = its.mesh->getBSDF();
+		Vector3f rayToCam = -ray.d.normalized();
 
 		//Get random Emitter
-		const std::vector<Emitter *> emis = scene->getEmitters();
-		int randomIndex = rand() % emis.size();
-		Emitter* emi = emis.at(randomIndex);
-
-
-
+		const std::vector<Emitter *> emitterVector = scene->getEmitters();
+		int randomIndex = rand() % emitterVector.size();
+		Emitter* currentSampledEmitter = emitterVector.at(randomIndex);
 
 		// Get Ld - MULTIPLE IMPORTANCE SAMPLING -----------------------------------------------------------------
 		Color3f Ld(0.f);
-		// BSDF Part
-
-		BSDFQueryRecord bsdfQueryWim(its.toLocal(toCam)); //wi Camera, wo sampled ray
-		bsdfQueryWim.p = its.p;
-		Color3f bsdfVal = bsdf->sample(bsdfQueryWim, sampler->next2D()); //Has cos already in
-		Color3f bsdfVal_b = bsdf->eval(bsdfQueryWim); // No pdf
-
-		//Check if intersect with emitter
-		Ray3f lightRay(its.p, its.toWorld(bsdfQueryWim.wo));
-
-		Color3f F_mat = Color3f(0.0f);
-		float w_mat = 1;
-		Intersection its_im;
-		if (scene->rayIntersect(lightRay, its_im)) {
-			if (its_im.mesh->getEmitter()) {
-				isNextEmitter = true;
-				//It intersects with light source
-				const Emitter* emi = its_im.mesh->getEmitter();
-				EmitterQueryRecord iRec = EmitterQueryRecord(its.p, its_im.p,
-						its_im.geoFrame.n);
-				Color3f Fo = emi->eval(iRec);
-				F_mat = Fo * bsdfVal_b;
-
-				EmitterQueryRecord emiRecord_im = EmitterQueryRecord(its.p,
-						its_im.p, its_im.geoFrame.n);
-				float cos_i_im = std::abs(its.geoFrame.n.dot(emiRecord_im.wi));
-				//		float cos0_im = std::abs(
-				//				its_im.geoFrame.n.dot(-emiRecord_im.wi));
-
-				//		float dist2_im = (its.p - its_im.p).squaredNorm();
-
-				float ems_pdf_im = emi->pdf(emiRecord_im);
-				float mat_pdf_im = bsdf->pdf(bsdfQueryWim);
-
-				w_mat = 1 / (ems_pdf_im + mat_pdf_im);
-				F_mat = Fo * bsdfVal_b * cos_i_im;
-			}
-		}
 
 		//Emitter Ld-----------------------------------------------------------------------------------------------------------------------------------------------
 
 		//Sample Emitter
-		EmitterQueryRecord emiRecord = EmitterQueryRecord(its.p);
-		emi->sample(emiRecord, sampler->next2D());
+		EmitterQueryRecord currentSampledEmitterQuery(its.p);
+
+		//Emitter sampling: wi , ref-> p in Emitter, sampled
+		// wo is ref -> cam
+		//All local
+
+		currentSampledEmitter->sample(currentSampledEmitterQuery,
+				sampler->next2D());
+
 		//Instead of iterating over all emitter
-		Color3f Lo = emis.size() * emi->eval(emiRecord); //Get Lo (not divided by pdf)
+		Color3f L_sampledEmitter = emitterVector.size()
+				* currentSampledEmitter->eval(currentSampledEmitterQuery); //Get Lo (not divided by pdf)
 
-		BSDFQueryRecord bsdfQueryWie = BSDFQueryRecord(its.toLocal(-ray.d),
-				its.toLocal(emiRecord.wi), ESolidAngle);
+		BSDFQueryRecord currentBSDFQueryToSampledEmitter(its.toLocal(rayToCam),
+				its.toLocal(currentSampledEmitterQuery.wi), ESolidAngle);
 
-		bsdfQueryWie.uv = its.uv;
-		Color3f bsdfVal_em = bsdf->eval(bsdfQueryWie);
+		currentBSDFQueryToSampledEmitter.uv = its.uv;
+		Color3f bsdfValToSampledEmitter = currentBSDF->eval(currentBSDFQueryToSampledEmitter);
 
 		Color3f F_em = Color3f(0.0f);
 		float w_em = 1;
 
 		//Check if something blocks the visibility
-		if (!scene->rayIntersect(emiRecord.shadowRay)) {
+		if (!scene->rayIntersect(currentSampledEmitterQuery.shadowRay)) {
 
-			//	float dist2_ie = (its.p - emiRecord.p).squaredNorm();
+			float cos_itsNormal_sEmitter = std::abs(
+					its.geoFrame.n.dot(
+							currentSampledEmitterQuery.wi.normalized()));
 
-			//	float cos0_ie = std::abs(
-			//			emiRecord.n.dot(-emiRecord.wi.normalized()));
-			float cos_i_ie = std::abs(
-					its.geoFrame.n.dot(emiRecord.wi.normalized()));
+			float ems_pdf_ie = currentSampledEmitter->pdf(
+					currentSampledEmitterQuery) / emitterVector.size();
 
-			float ems_pdf_ie = emi->pdf(emiRecord)/emis.size();
-
-			float mat_pdf_ie = bsdf->pdf(bsdfQueryWie);
+			float mat_pdf_ie = currentBSDF->pdf(currentBSDFQueryToSampledEmitter);
 
 			w_em = 1 / (ems_pdf_ie + mat_pdf_ie);
 
-			F_em = Lo * bsdfVal_em * cos_i_ie;
+			F_em = L_sampledEmitter * bsdfValToSampledEmitter * cos_itsNormal_sEmitter;
 
+		}else{
+			//Emitter constribution is 0, because its blocked.
+		}
+
+		// BSDF Part ----------------------------------------------------------------------------------------------
+
+		BSDFQueryRecord currentBSDFQueryToSampledDirection(its.toLocal(rayToCam)); //wi Camera, wo sampled ray
+		currentBSDFQueryToSampledDirection.p = its.p;
+
+		currentBSDF->sample(currentBSDFQueryToSampledDirection, sampler->next2D()); //Has cos already in
+		Color3f bsdfValToSampledDirection = currentBSDF->eval(currentBSDFQueryToSampledDirection); // No pdf
+		//Sampled direction in wo
+
+
+		//Check if intersect with emitter
+		Ray3f nextRay(its.p, its.toWorld(currentBSDFQueryToSampledDirection.wo));
+
+		Color3f F_mat = Color3f(0.0f);
+		float w_mat = 1;
+		Intersection its_sampledDirection;
+
+		if (scene->rayIntersect(nextRay, its_sampledDirection)) {
+			if (its_sampledDirection.mesh->getEmitter()) {
+				isNextEmitter = true;
+
+				//It intersects with light source
+				const Emitter* emi = its_sampledDirection.mesh->getEmitter();
+
+
+
+				EmitterQueryRecord emitterQuerySampledDirection(its.p, its_sampledDirection.p,
+						its_sampledDirection.geoFrame.n);
+				Color3f Fo = emi->eval(emitterQuerySampledDirection);
+
+				float cos_itsNormal_sDirection = std::abs(its.geoFrame.n.dot(emitterQuerySampledDirection.wi));
+
+
+				float ems_pdf_im = emi->pdf(emitterQuerySampledDirection);
+				float mat_pdf_im = currentBSDF->pdf(currentBSDFQueryToSampledDirection);
+
+				w_mat = 1 / (ems_pdf_im + mat_pdf_im);
+				F_mat = Fo * bsdfValToSampledDirection * cos_itsNormal_sDirection;
+			}else{
+				// Doesnt it doesnt hit an emitter, contribution to Ld is zero
+			}
+		}else{
+			// Doesnt anything, ergo, it doesnt hit an emitter, contribution to Ld is zero
 		}
 
 		//Same units------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -137,12 +149,12 @@ public:
 
 		Color3f Li(0.f);
 		if (sampler->next1D() > m_q) {
-			Li = this->Li(scene, sampler, lightRay, bsdf->isDiffuse())
-								* bsdfVal;
+			Li = this->Li(scene, sampler, nextRay, currentBSDF->isDiffuse())
+					* bsdfValToSampledDirection;
 			if (!isNextEmitter) {
 				return (Le + Ld + Li) / (1 - m_q);
 			} else {
-				return (Le +Li) / (1 - m_q);
+				return (Le + Li) / (1 - m_q);
 			}
 		} else {
 			return (Le + Ld) / (1 - m_q);
