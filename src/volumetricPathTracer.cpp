@@ -57,7 +57,7 @@ public:
 		} else {
 			//Too slow if only environmental Light
 			Ray3f dummy;
-			//	Le = sampleRandomLight(its, scene, sampler, ray, dummy);
+		//	Le = sampleRandomLight(its, scene, sampler, ray, dummy);
 		}
 
 		//Get Li

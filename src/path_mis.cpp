@@ -38,21 +38,17 @@ public:
 			Le = emi2->eval(iRec2);
 		}
 
-		//Get Li - Infos
+		// Global constants
 		const BSDF* bsdf = its.mesh->getBSDF();
 		Vector3f toCam = -ray.d.normalized();
-
-		//	BSDFQueryRecord query(its.toLocal(toCam)); //wi Camera, wo sampled ray
-		//	query.p = its.p;
-		//	Color3f bsdfVal = bsdf->sample(query, sampler->next2D());
-
-		//Check if intersect with emitter
-		//	Ray3f lightRay(its.p, its.toWorld(query.wo));
 
 		//Get random Emitter
 		const std::vector<Emitter *> emis = scene->getEmitters();
 		int randomIndex = rand() % emis.size();
 		Emitter* emi = emis.at(randomIndex);
+
+
+
 
 		// Get Ld - MULTIPLE IMPORTANCE SAMPLING -----------------------------------------------------------------
 		Color3f Ld(0.f);
