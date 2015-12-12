@@ -113,11 +113,14 @@ public:
 			throw NoriException(
 					"There is no shape attached to this Area light!");
 
-		int rowSampledIdx = sample1D(0, m_marginalPDF_array,
-				m_marginalCDF_array, (float) sample.x());
+	//	int rowSampledIdx = sample1D(0, m_marginalPDF_array,
+	//			m_marginalCDF_array, (float) sample.x());
 
-		int colSampledIdx = sample1D(rowSampledIdx, m_conditionalPDF_map,
-				m_conditionalCDF_map, (float) sample.y());
+	//	int colSampledIdx = sample1D(rowSampledIdx, m_conditionalPDF_map,
+	//			m_conditionalCDF_map, (float) sample.y());
+
+		int rowSampledIdx =1;
+		int colSampledIdx =1;
 
 		Point2f idxs(rowSampledIdx, colSampledIdx);
 

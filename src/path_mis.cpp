@@ -47,6 +47,9 @@ public:
 		int randomIndex = rand() % emitterVector.size();
 		Emitter* currentSampledEmitter = emitterVector.at(randomIndex);
 
+
+
+
 		// Get Ld - MULTIPLE IMPORTANCE SAMPLING -----------------------------------------------------------------
 		Color3f Ld(0.f);
 
@@ -94,6 +97,7 @@ public:
 		}else{
 			//Emitter constribution is 0, because its blocked.
 		}
+
 
 		// BSDF Part ----------------------------------------------------------------------------------------------
 
@@ -146,12 +150,12 @@ public:
 			Li = this->Li(scene, sampler, nextRay, currentBSDF->isDiffuse())
 					*bsdfVal_cos_pdf;
 			if (isNextEmitter) {
-				return (Le + Ld);/// (1 - m_q);
+				return (Le + Ld);
 			} else {
-				return (Le + Ld + Li);/// (1 - m_q);
+				return (Le + Ld + Li/ (1 - m_q));
 			}
 		} else {
-			return (Le + Ld);// / (1 - m_q);
+			return (Le + Ld);
 		}
 	}
 

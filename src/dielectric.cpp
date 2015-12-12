@@ -86,8 +86,8 @@ public:
 		} else {
 			bRec.wo = refraction;
 			//return snell * snell * (1 - F) * Color3f(1.f)/cos;
-//			return snell * snell * Color3f(1.f); //Montecarlo deterministic (1-F)/pdf=(1-F)
-			return Color3f(1.f);
+			return snell * snell * Color3f(1.f); //Montecarlo deterministic (1-F)/pdf=(1-F)
+//			return Color3f(1.f);
 		}
 
 	}

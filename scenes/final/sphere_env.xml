@@ -5,7 +5,7 @@
 	</sampler>
 
 	<!-- Integrator -->
-	<integrator type="volPathTracer" />
+	<integrator type="path_mis" />
 
 	<!-- Render the scene as viewed by a perspective camera -->
 	<camera type="perspective">
@@ -30,9 +30,6 @@
 		<emitter type="env_map">
 			<string name="filename" value="rnl.exr"/>
 		</emitter>
-
-
-
 	</mesh>
 
 	<!-- Create an analytic sphere -->
@@ -41,10 +38,9 @@
 		<point name="center" value="0,0,1"/>
 		<float name="radius" value="1.5"/>
 
-		<bsdf type="dielectric"/>
-
+		<bsdf type="mirror"/>
 	</mesh>
-
+<!--
 	<mesh type="sphere">
 		<point name="center" value="0,0,1"/>
 		<float name="radius" value="0.5"/>
@@ -55,7 +51,7 @@
 		</medium>
 		
 	</mesh>
-
+-->
 	<!-- Ground plane -->
 <!--	<mesh type="obj">
 		<string name="filename" value="plane.obj"/>
