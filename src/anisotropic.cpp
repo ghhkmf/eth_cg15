@@ -48,7 +48,7 @@ public:
 		 implementation. Please see the course staff if you're
 		 interested in implementing a more realistic version
 		 of this BRDF. */
-		m_ks = 1 - m_kd.maxCoeff();
+		m_ks = 1 - (m_kd.x() + m_kd.y() + m_kd.z()) / 3;
 	}
 
 	/// Evaluate the anisotropic normal distribution D
