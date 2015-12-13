@@ -118,6 +118,8 @@ public:
      * or not to store photons on a surface
      */
     virtual bool isDiffuse() const { return false; }
+	virtual bool isSubsurface() const { return false; }
+
 };
 
 NORI_NAMESPACE_END

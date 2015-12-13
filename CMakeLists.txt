@@ -92,6 +92,7 @@ add_executable(nori
   src/homogeneousMedium.cpp
   src/translucent.cpp
   src/anisotropic.cpp
+  src/subsurface.cpp
 )
 
 # The following lines build the warping test application
