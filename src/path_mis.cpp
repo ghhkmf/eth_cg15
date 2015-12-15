@@ -13,15 +13,12 @@ public:
 		m_q = 0.2;
 	}
 
-	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
-		return this->Li(scene, sampler, ray, false);
-	}
-
-	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray,
-			bool isDiffuseBounce) const {
+	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &_ray) const {
 
 		Color3f result;
-		Color3f multiConst(1.f);
+		Color3f multiConst(1.f/(1-m_q));
+		Ray3f ray=_ray;
+
 
 		bool run = true;
 
@@ -91,16 +88,17 @@ public:
 						its.shFrame.n.dot(
 								currentSampledEmitterQuery.wi.normalized()));
 
+				float dist = (its.p-currentSampledEmitterQuery.p).norm();
+
 				float ems_pdf_ie = currentSampledEmitter->pdf(
-						currentSampledEmitterQuery) / emitterVector.size();
+						currentSampledEmitterQuery) *cos_itsNormal_sEmitter/(emitterVector.size());
 
 				float mat_pdf_ie = currentBSDF->pdf(
 						currentBSDFQueryToSampledEmitter);
 
 				w_em = 1 / (ems_pdf_ie + mat_pdf_ie);
 
-				F_em = L_sampledEmitter * bsdfValToSampledEmitter
-						* cos_itsNormal_sEmitter;
+				F_em = L_sampledEmitter * bsdfValToSampledEmitter;
 
 			} else {
 				//Emitter constribution is 0, because its blocked.
@@ -142,7 +140,9 @@ public:
 							its_sampledDirection.geoFrame.n);
 					Color3f Fo = emi->eval(emitterQuerySampledDirection);
 
-					float ems_pdf_im = emi->pdf(emitterQuerySampledDirection);
+					float dist = (its.p-its_sampledDirection.p).norm();
+
+					float ems_pdf_im = emi->pdf(emitterQuerySampledDirection)/(dist*dist*emitterVector.size());
 					float mat_pdf_im = currentBSDFpdf_sDirection;
 
 					w_mat = 1 / (ems_pdf_im + mat_pdf_im);
@@ -157,16 +157,13 @@ public:
 			//Same units------------------------------------------------------------------------------------------------------------------------------------------------------
 
 			Ld = w_em * F_em + w_mat * F_mat;
-			//TODO: Problem: table_path_mis.xml
 
 			result += (Le + Ld) * multiConst;
+			ray=nextRay;
 
 			//----------------------------------------
 			//	Russian Roulette
-			Color3f Li(0.f);
 			if (sampler->next1D() > m_q) {
-				Li = this->Li(scene, sampler, nextRay, currentBSDF->isDiffuse())
-						* bsdfVal_cos_pdf;
 				if (isNextEmitter) {
 					run = false;
 				} else {
