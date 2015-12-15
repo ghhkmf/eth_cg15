@@ -5,7 +5,7 @@
 	</sampler>
 
 	<!-- Integrator -->
-	<integrator type="path_mis" />
+	<integrator type="path_mats" />
 
 	<!-- Render the scene as viewed by a perspective camera -->
 	<camera type="perspective">

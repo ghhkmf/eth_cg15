@@ -64,10 +64,8 @@ public:
 
 		if (isRefl)
 			return Color3f(1.f) * m_albedo;
-		else if (isRefr)
-			return snell * snell * Color3f(1.f) * m_albedo;
 		else
-			return Color3f(0.0f);
+			return snell * snell * Color3f(1.f) * m_albedo;
 	}
 
 	virtual float pdf(const BSDFQueryRecord &bRec) const override {
@@ -100,12 +98,12 @@ public:
 			MatrixXf rot = Warp::getRotationMatrix(pole,
 					Vector3f(0.f, 0.f, 1.f));
 
-			prob= Warp::squareToCosineHemispherePdf(rot * bRec.wo)*0.5f;
+			prob = Warp::squareToCosineHemispherePdf(rot * bRec.wo) * 0.5f;
 		}
 		return prob;
 	}
 
-	virtual Color3f sample(BSDFQueryRecord &bRec,const Point2f &sample) const
+	virtual Color3f sample(BSDFQueryRecord &bRec, const Point2f &sample) const
 			override {
 
 		Vector3f n(0, 0, 1);
@@ -191,6 +189,8 @@ private:
 
 		Vector3f refraction = part1 - part2;
 		refraction = refraction.normalized();
+
+		refraction = -bRec.wi;
 
 		//Reflection
 		Vector3f reflection = Vector3f(-bRec.wi.x(), -bRec.wi.y(), bRec.wi.z());
