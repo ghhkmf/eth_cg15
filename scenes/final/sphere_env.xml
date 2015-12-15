@@ -5,7 +5,7 @@
 	</sampler>
 
 	<!-- Integrator -->
-	<integrator type="path_mats" />
+	<integrator type="volPathTracer" />
 
 	<!-- Render the scene as viewed by a perspective camera -->
 	<camera type="perspective">
@@ -38,22 +38,20 @@
 		<point name="center" value="0,0,1"/>
 		<float name="radius" value="1.5"/>
 
-		<bsdf type="trans">
-			<color name="albedo" value="1,0,0"/>
-		</bsdf>
+		<bsdf type="dielectric"/>
 	</mesh>
-<!--
+
 	<mesh type="sphere">
 		<point name="center" value="0,0,1"/>
 		<float name="radius" value="0.5"/>
 
 		<medium type="homogen">
-			<float name="sigma_a" value="0.001"/>
-			<float name="sigma_s" value="0.001"/>	
+			<float name="sigma_a" value="0.1"/>
+			<float name="sigma_s" value="0.2"/>	
 		</medium>
 		
 	</mesh>
--->
+
 	<!-- Ground plane -->
 <!--	<mesh type="obj">
 		<string name="filename" value="plane.obj"/>
