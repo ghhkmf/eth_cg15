@@ -303,49 +303,7 @@ public:
 	 }
 	 */
 }
-/*
- Color3f otherLi(const Scene *scene, Sampler *sampler,
- const Ray3f &ray) const {
- //This is Extended PathTracing
 
- Intersection its;
-
- // If not visible return black
- if (!scene->rayIntersect(ray, its)) {
- //This should never happen if there is a environmental Map
- return Color3f(0.3f);
- }
- //Get Le
- Color3f Le(0.0f);
- const Emitter* emi2 = its.mesh->getEmitter();
- if (emi2) {
- //Its an Emitter.
- EmitterQueryRecord iRec2(ray.o, its.p, its.shFrame.n);
- Le = emi2->eval(iRec2);
- } else {
- //Too slow if only environmental Light
- Ray3f dummy;
- //	Le = sampleRandomLight(its, scene, sampler, ray, dummy);
- }
-
- //Get Li
- const BSDF* bsdf = its.mesh->getBSDF();
- Vector3f toCam = -ray.d.normalized();
-
- BSDFQueryRecord query(its.toLocal(toCam)); //wi Camera, wo sampled ray
- query.p = its.p;
- query.uv = its.uv;
- Color3f bsdfVal = bsdf->sample(query, sampler->next2D());
-
- //Next path section
- Ray3f newRay(its.p, its.toWorld(query.wo));
-
- if (sampler->next1D() > m_q)
- return Le + this->Li(scene, sampler, newRay) * bsdfVal / (1.f - m_q);
- else
- return Le;
- }
- */
 
 Color3f sampleRandomLight(Intersection its, const Scene* scene,
 		Sampler *sampler, const Ray3f &ray, Ray3f& shadowRayOut) const {
@@ -379,26 +337,6 @@ Color3f sampleRandomLight(Intersection its, const Scene* scene,
 	}
 }
 
-Color3f volumetricPathTracing(const Scene *scene, Sampler *sampler,
-		const Ray3f &ray, const Medium* medium) const {
-
-//This is path_mats. Works for Mirror
-	Intersection its;
-
-// If not visible return black
-	if (!scene->rayIntersect(ray, its)) {
-		/*This should never happen if there is a environmental Map*/
-		return Color3f(0.3f);
-	}
-
-	float tmax = its.t;
-	float t = medium->sampleFreeFlightDistance(sampler->next1D()); //Sample free flying path
-
-//TODO: Check fireflies in dielectric/medium -> Snell coefficient?
-
-//TODO: Add Emitter Sampling into Rediance ->Weights?
-
-}
 
 std::string toString() const {
 	return "VolumetricPathTracer[]";
