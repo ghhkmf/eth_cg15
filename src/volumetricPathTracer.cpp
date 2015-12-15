@@ -66,6 +66,7 @@ public:
 
 		BSDFQueryRecord query(its.toLocal(toCam)); //wi Camera, wo sampled ray
 		query.p = its.p;
+		query.uv = its.uv;
 		Color3f bsdfVal = bsdf->sample(query, sampler->next2D());
 
 		//Next path section
@@ -192,6 +193,7 @@ public:
 
 			BSDFQueryRecord query(its.toLocal(toCam)); //wi Camera, wo sampled ray
 			query.p = its.p;
+			query.uv = its.uv;
 			Color3f bsdfVal = bsdf->sample(query, sampler->next2D());
 
 			//Sampled ray in query.wo

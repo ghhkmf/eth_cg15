@@ -104,12 +104,12 @@ public:
 	}
 	/// Evaluate the sampling density of \ref sample() wrt. solid angles
 	virtual float pdf(const BSDFQueryRecord &bRec) const override {
-
+		/*
 		if (bRec.measure != ESolidAngle || Frame::cosTheta(bRec.wi) <= 0
 				|| Frame::cosTheta(bRec.wo) <= 0) {
 			return 0.0f;
 		}
-
+		*/
 		Normal3f wh = (bRec.wi + bRec.wo).normalized();
 
 		float Dh = evalBeckmann(wh);
@@ -139,10 +139,10 @@ public:
 			sample(0) = (sample(0) - m_ks) / (1 - m_ks); // transform sample into range [0;1]
 			bRec.wo = Warp::squareToCosineHemisphere(sample);
 		}
-
+		/*
 		if (Frame::cosTheta(bRec.wi) <=0 || Frame::cosTheta(bRec.wo) <= 0)
 			return Color3f(0.0f);
-
+			*/
 		if (pdf(bRec) > 0)
 			return eval(bRec) / pdf(bRec) * Frame::cosTheta(bRec.wo);
 		else
