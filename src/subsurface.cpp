@@ -26,7 +26,7 @@ NORI_NAMESPACE_BEGIN
 /**
  * \brief Diffuse / Lambertian BRDF model
  */
-class Subsurface : public BSDF {
+class Subsurface : public NoriObject {
 public:
     Subsurface(const PropertyList &propList) : m_albedo(nullptr) {
         if(propList.has("albedo")) {
@@ -94,48 +94,20 @@ public:
     }
 
     /// Evaluate the BRDF model
-    virtual Color3f eval(const BSDFQueryRecord &bRec) const override {
+    virtual Color3f dipoleDiffusion(const BSDFQueryRecord &bRec) const  {
         /* This is a smooth BRDF -- return zero if the measure
            is wrong, or when queried for illumination on the backside */
 		return Color3f(1.0f);
 
     }
 
-    /// Compute the density of \ref sample() wrt. solid angles
-    virtual float pdf(const BSDFQueryRecord &bRec) const override {
-        /* This is a smooth BRDF -- return zero if the measure
-           is wrong, or when queried for illumination on the backside */
-        if (bRec.measure != ESolidAngle
-            || Frame::cosTheta(bRec.wi) <= 0
-            || Frame::cosTheta(bRec.wo) <= 0)
-            return 0.0f;
-
-
-        /* Importance sampling density wrt. solid angles:
-           cos(theta) / pi.
-
-           Note that the directions in 'bRec' are in local coordinates,
-           so Frame::cosTheta() actually just returns the 'z' component.
-        */
-        return INV_PI * Frame::cosTheta(bRec.wo);
-    }
+   
+    
 
     /// Draw a a sample from the BRDF model
-    virtual Color3f sample(BSDFQueryRecord &bRec, const Point2f &sample) const override {
-        if (Frame::cosTheta(bRec.wi) <= 0)
-            return Color3f(0.0f);
+    virtual Color3f singleScatter(BSDFQueryRecord &bRec, const Point2f &sample) const  {
+        
 
-        bRec.measure = ESolidAngle;
-
-        /* Warp a uniformly distributed sample on [0,1]^2
-           to a direction on a cosine-weighted hemisphere */
-        bRec.wo = Warp::squareToCosineHemisphere(sample);
-
-        /* Relative index of refraction: no change */
-        bRec.eta = 1.0f;
-
-        /* eval() / pdf() * cos(theta) = albedo. There
-           is no need to call these functions. */
         return m_albedo->eval(bRec.uv);
     }
 
