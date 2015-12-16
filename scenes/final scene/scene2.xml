@@ -6,13 +6,13 @@
 
 	<!-- Use the average visibility integrator -->
 	<!-->
-	<integrator type="path_mats">
+	<integrator type="path_mis">
 	</integrator>
-	<-->
 	
+	<-->
 	<integrator type="photonmapper">
 		<float name="photonRadius" value="0.08"/>
-		<integer name="photonCount" value="1000000"/>
+		<integer name="photonCount" value="300000"/>
 	</integrator>
 	
 
@@ -55,8 +55,8 @@
 	<emitter type="spot">
 		<point name="position" value = "1.5,3.12894,1.33235"/>
 		<color name="power" value="200,200,200"/>
-		<float name="cosFalloffStart" value=".7"/>
-		<float name="cosTotalWidth" value=".4"/>
+		<float name="cosFalloffStart" value=".8"/>
+		<float name="cosTotalWidth" value=".5"/>
 		<vector name="direction" value = "-.0012,-.6448,-2.1935"/>
 	</emitter>
 
@@ -230,15 +230,7 @@
 		</bsdf>
 	</mesh>
 
-	<!-->
-	<mesh type="obj">
-		<string name="filename" value="stones.obj"/>
-
-		<bsdf type="diffuse">
-			<color name="albedo" value=".4,.9,.2"/>
-		</bsdf>
-	</mesh>	
-
+	<!--><-->
 	<mesh type="obj">
 		<string name="filename" value="horse2.obj"/>
 
@@ -247,7 +239,7 @@
 		</bsdf>
 	</mesh>
 
-
+	
 	<mesh type="obj">
 		<string name="filename" value="grass.obj"/>
 
@@ -255,7 +247,15 @@
 			<color name="albedo" value="0,0.8,0.1"/>
 		</bsdf>
 	</mesh>
-	<-->
+
+	<mesh type="obj">
+		<string name="filename" value="stones.obj"/>
+
+		<bsdf type="diffuse">
+			<color name="albedo" value=".5,.2,.1"/>
+		</bsdf>
+	</mesh>	
+	
 
 
 	<!--clock-->
