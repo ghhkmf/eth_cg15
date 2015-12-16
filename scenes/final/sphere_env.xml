@@ -46,8 +46,8 @@
 		<float name="radius" value="0.5"/>
 
 		<medium type="homogen">
-			<float name="sigma_a" value="0.1"/>
-			<float name="sigma_s" value="0.2"/>	
+			<float name="sigma_a" value="0.90"/>
+			<float name="sigma_s" value="0"/>	
 		</medium>
 		
 	</mesh>

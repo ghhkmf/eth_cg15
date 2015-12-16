@@ -1,7 +1,7 @@
 <scene>
 	<!-- Independent sample generator, user-selected samples per pixel -->
 	<sampler type="independent">
-		<integer name="sampleCount" value="256"/>
+		<integer name="sampleCount" value="512"/>
 	</sampler>
 
 	<!-- Use the average visibility integrator -->
@@ -14,8 +14,10 @@
 		<float name="photonRadius" value="0.08"/>
 		<integer name="photonCount" value="1000000"/>
 	</integrator>
-	
-
+<!--
+	<integrator type="volPathTracer">
+	</integrator>	
+-->
 	<!-- Render the scene as viewed by a perspective camera -->
 	<camera type="perspective">
 		<transform name="toWorld">
@@ -228,6 +230,10 @@
 			<float name="extIOR" value="1.5"/>
 			<float name="intIOR" value="1.33"/>
 		</bsdf>
+		<medium type="homogen">
+			<float name="sigma_a" value="0.9"/>
+			<float name="sigma_s" value="0"/>
+		</medium>
 	</mesh>
 
 	<!-->

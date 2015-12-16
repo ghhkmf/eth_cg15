@@ -28,7 +28,10 @@ public:
 		m_sigma_a = props.getFloat("sigma_a");
 		m_sigma_s = props.getFloat("sigma_s");
 		m_sigma_t = m_sigma_a + m_sigma_s;
-		m_albedo = m_sigma_s / m_sigma_t;
+		if(m_sigma_t>0)
+			m_albedo = m_sigma_s / m_sigma_t;
+		else
+			m_albedo=m_sigma_s;
 	}
 
 	std::string toString() const {
@@ -51,14 +54,13 @@ public:
 			throw NoriException(
 					"There is no shape attached to this Area light!");
 
-
 		/* Warp a uniformly distributed sample on [0,1]^2
 		 to a direction on a cosine-weighted hemisphere */
 		lRec.wo = Warp::squareToUniformSphere(sample);
 
-		lRec.pdf=pdf(lRec);
+		lRec.pdf = pdf(lRec);
 
-		return m_sigma_s/m_sigma_t;
+		return m_albedo;
 
 	}
 
@@ -70,11 +72,17 @@ public:
 	}
 
 	float getTransmittanceValue(Point3f x, Point3f y) const {
-		return std::exp(-m_sigma_t * (y - x).norm());
+		if (m_sigma_t > 0)
+			return std::exp(-m_sigma_t * (y - x).norm());
+		else
+			return 1.f;
 	}
 
 	float sampleFreeFlightDistance(float sample) const {
-		return -std::log(1 - sample) / m_sigma_t;
+		if (m_sigma_t > 0)
+			return -std::log(1 - sample) / m_sigma_t;
+		else
+			return 10000.f;
 	}
 
 	float getSigmaT() const {
@@ -84,11 +92,12 @@ public:
 		return m_sigma_s;
 	}
 
-private:
 	float phaseFunction(const MediumQueryRecord &lRec) const {
 		//Independent on wi, and wo and p. Isotropic medium
 		return 1 / (4 * M_PI);
 	}
+
+private:
 
 };
 

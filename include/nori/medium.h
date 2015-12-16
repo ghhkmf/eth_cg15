@@ -142,8 +142,6 @@ public:
 	void setShape(Shape * shape) {
 		m_shape = shape;
 	}
-
-private:
 	/**
 	 * Evaluated the phasefunction. This is defined in the Medium class depending on the type.
 	 * Use inversion Method to sample custom phaseFunctions

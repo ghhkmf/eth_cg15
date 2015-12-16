@@ -126,14 +126,8 @@ public:
 			throw NoriException(
 					"There is no shape attached to this Area light!");
 
-			int rowSampledIdx =100;
-			int colSampledIdx =100;
-
-		//int rowSampledIdx = sample1D(0, m_marginalPDF_array,
-		//		m_marginalCDF_array, (float) sample.x());
-
-		//int colSampledIdx = sample1D(rowSampledIdx, m_conditionalPDF_map,
-		//		m_conditionalCDF_map, (float) sample.y());
+		int rowSampledIdx = sample1DMarginal((float) sample.x());
+		int colSampledIdx = sample1DConditional(rowSampledIdx, (float) sample.y());
 
 		Point2f idxs(rowSampledIdx, colSampledIdx);
 
@@ -154,21 +148,23 @@ public:
 	/**
 	 * Returns index of sampled element
 	 */
-
-	int sample1D(int rowNum, std::vector<std::vector<float> > pdf,
-			std::vector<std::vector<float> > cdf, float sample) const {
-		return binarySearch(cdf, rowNum, sample);
+	int sample1DMarginal(float sample) const {
+		auto first = std::lower_bound(m_marginalCDF_array[0].begin(),
+				m_marginalCDF_array[0].end(), sample);
+		int res = first - m_marginalCDF_array[0].begin() - 1;
+		if (res < 0)
+			res = 0;
+		return res;
 	}
 
-	int binarySearch(std::vector<std::vector<float> > cdf, int rowNum,
-			float sample) const {
-		auto first = std::lower_bound(cdf[rowNum].begin(), cdf[rowNum].end(),
+	int sample1DConditional(int rowNum, float sample) const{
+		auto first = std::lower_bound(m_conditionalCDF_map[rowNum].begin(), m_conditionalCDF_map[rowNum].end(),
 				sample);
-		int res = first - cdf[rowNum].begin() - 1;
-		if(res<0)
-			res=0;
-	//	cout << res << endl;
+		int res = first - m_conditionalCDF_map[rowNum].begin() - 1;
+		if (res < 0)
+			res = 0;
 		return res;
+
 	}
 
 	Color3f eval(const EmitterQueryRecord &lRec) const {
@@ -182,7 +178,6 @@ public:
 
 		Color3f result;
 		bilinearInterpolation(indexes, result);
-		//	cout << lRec.ref.x()<<" ";
 		return result;
 	}
 
@@ -222,6 +217,8 @@ public:
 		Point2f idxs;
 		pointToIndex(lRec.p, idxs);
 
+		float cos_theta_i = std::abs(lRec.n.dot(-lRec.wi));
+
 		return m_marginalPDF_array[0][idxs.x()]
 				* m_conditionalPDF_map[idxs.x()][idxs.y()];
 	}
@@ -260,27 +257,7 @@ public:
 		idx[0] = row;
 		idx[1] = col;
 	}
-	/*
-	 void saveFloatMap(std::vector<std::vector<float> > map) {
-	 int numCols = map.cols();
-	 int numRows = map.rows();
-
-	 Bitmap m(Vector2i(numCols, numRows)); //Invert to match size
-
-	 for (int r = 0; r < numRows; r++) {
-	 for (int c = 0; c < numCols; c++) {
-	 m(r, c) = Color3f(map(r, c) * 200);
-	 }
-	 }
-
-	 filesystem::path filename2 = getFileResolver()->resolve("test.exr"); // For controlling
-
-	 m.save(filename2.str());
-	 }
-	 */
 protected:
-	//Point3f m_position;
-//	Color3f m_power;
 	Bitmap m_map;
 
 	std::vector<std::vector<float> > m_conditionalPDF_map;
