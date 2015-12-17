@@ -6,9 +6,6 @@
 
 	<!-- Use the average visibility integrator -->
 	
-	<integrator type="volPathTracer">
-	</integrator>
-	
 <!--
 	<integrator type="photonmapper">
 		<float name="photonRadius" value="0.08"/>
