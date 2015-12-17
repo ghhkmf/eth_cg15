@@ -217,8 +217,6 @@ public:
 		Point2f idxs;
 		pointToIndex(lRec.p, idxs);
 
-		float cos_theta_i = std::abs(lRec.n.dot(-lRec.wi));
-
 		return m_marginalPDF_array[0][idxs.x()]
 				* m_conditionalPDF_map[idxs.x()][idxs.y()];
 	}

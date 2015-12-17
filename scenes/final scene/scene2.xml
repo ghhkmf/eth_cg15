@@ -62,10 +62,17 @@
 		<float name="cosTotalWidth" value=".5"/>
 		<vector name="direction" value = "-.0012,-.6448,-2.1935"/>
 	</emitter>
-
-
-
+<!--
+       <mesh type="sphere">
+		<point name="center" value="0,0,1"/>
+		<float name="radius" value="1000"/>
+		<emitter type="env_map">
+			<string name="filename" value="../final/rnl.exr"/>
+		</emitter>	
+	</mesh>
+-->
 	<!-- Walls -->
+
 	<mesh type="obj">
 		<string name="filename" value="rightWall.obj"/>
 
@@ -104,7 +111,7 @@
 			<color name="albedo" value=".95,.95,.95"/>
 		</bsdf>
 	</mesh>	
-	
+
 	<mesh type="obj">
 		<string name="filename" value="frontWall.obj"/>
 		<bsdf type="diffuse">
@@ -227,13 +234,15 @@
 	<mesh type="sphere">
 		<point name="center" value="1.4988,2.48416,-0.86119"/>
 		<float name="radius" value=".95"/>
+<!--
 		<bsdf type="dielectric">
 			<float name="extIOR" value="1.5"/>
 			<float name="intIOR" value="1.33"/>
 		</bsdf>
+-->
 		<medium type="homogen">
-			<float name="sigma_a" value="0.9"/>
-			<float name="sigma_s" value="0"/>
+			<float name="sigma_a" value="0.02"/>
+			<float name="sigma_s" value="0.01"/>
 		</medium>
 	</mesh>
 
