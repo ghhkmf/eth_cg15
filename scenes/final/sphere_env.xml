@@ -37,10 +37,12 @@
 	<mesh type="sphere">
 		<point name="center" value="0,0,1"/>
 		<float name="radius" value="1.5"/>
-
-		<bsdf type="trans">
+<!--		<bsdf type="mirror"/>-->
+	<!--	<bsdf type="trans">
 			<color name="albedo" value="1,0,0"/>
 		</bsdf>
+	-->
+		<bsdf type="dielectric"/>	
 	</mesh>
 
 	<mesh type="sphere">
