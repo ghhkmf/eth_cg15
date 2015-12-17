@@ -165,9 +165,11 @@ public:
 				"  radius = %f,\n"
 				"  bsdf = %s,\n"
 				"  emitter = %s\n"
+				"  medium = %s\n"
 				"]", m_position.toString(), m_radius,
 				m_bsdf ? indent(m_bsdf->toString()) : std::string("null"),
-				m_emitter ? indent(m_emitter->toString()) : std::string("null"));
+				m_emitter ? indent(m_emitter->toString()) : std::string("null"),
+				m_medium ? indent(m_medium->toString()) : std::string("null"));
 	}
 
 protected:

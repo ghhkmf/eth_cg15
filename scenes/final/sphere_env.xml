@@ -1,7 +1,7 @@
 <scene>
 	<!-- Independent sample generator, user-selected samples per pixel -->
 	<sampler type="independent">
-		<integer name="sampleCount" value="128"/>
+		<integer name="sampleCount" value="512"/>
 	</sampler>
 
 	<!-- Integrator -->
@@ -38,20 +38,22 @@
 		<point name="center" value="0,0,1"/>
 		<float name="radius" value="1.5"/>
 
-		<bsdf type="dielectric"/>
+		<bsdf type="trans">
+			<color name="albedo" value="1,0,0"/>
+		</bsdf>
 	</mesh>
 
 	<mesh type="sphere">
 		<point name="center" value="0,0,1"/>
 		<float name="radius" value="0.5"/>
 
+		<bsdf type="dielectric"/>
+	
 		<medium type="homogen">
-			<float name="sigma_a" value="0.90"/>
+			<float name="sigma_a" value="0.3"/>
 			<float name="sigma_s" value="0"/>	
-		</medium>
-		
+		</medium>	
 	</mesh>
-
 	<!-- Ground plane -->
 <!--	<mesh type="obj">
 		<string name="filename" value="plane.obj"/>

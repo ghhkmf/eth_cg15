@@ -24,7 +24,6 @@
 #include <nori/emitter.h>
 #include <nori/medium.h>
 
-
 NORI_NAMESPACE_BEGIN
 
 Scene::Scene(const PropertyList &) {
@@ -72,9 +71,9 @@ void Scene::addChild(NoriObject *obj) {
 		m_shapes.push_back(mesh);
 		if (mesh->isEmitter())
 			m_emitters.push_back(mesh->getEmitter());
+
 		if (mesh->hasMedium())
 			m_mediums.push_back(mesh->getMedium());
-
 	}
 		break;
 	case EEmitter:
@@ -125,12 +124,12 @@ std::string Scene::toString() const {
 		lights += "\n";
 	}
 	std::string mediums;
-		for (size_t i = 0; i < mediums.size(); ++i) {
-			mediums += std::string("  ") + indent(m_mediums[i]->toString(), 2);
-			if (i + 1 < m_mediums.size())
-				mediums += ",";
-			mediums += "\n";
-		}
+	for (size_t i = 0; i < mediums.size(); ++i) {
+		mediums += std::string("  ") + indent(m_mediums[i]->toString(), 2);
+		if (i + 1 < m_mediums.size())
+			mediums += ",";
+		mediums += "\n";
+	}
 
 	return tfm::format("Scene[\n"
 			"  integrator = %s,\n"
@@ -143,8 +142,11 @@ std::string Scene::toString() const {
 			"  mediums = {\n"
 			"  %s  }\n"
 			"]", indent(m_integrator->toString()),
-			indent(m_sampler->toString()), indent(m_camera->toString()),
-			indent(shapes, 2), indent(lights, 2), indent(mediums, 2));
+			indent(m_sampler->toString()),
+			indent(m_camera->toString()),
+			indent(shapes, 2),
+			indent(lights, 2),
+			indent(mediums, 2));
 }
 
 NORI_REGISTER_CLASS(Scene, "scene");

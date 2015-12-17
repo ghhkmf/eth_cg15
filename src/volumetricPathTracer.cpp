@@ -52,6 +52,7 @@ public:
 					}
 				}
 			}
+
 			if (medium) {
 				////////////////////////
 				// Origin is in MEDIUM, do Volumetric Path tracing
@@ -59,7 +60,7 @@ public:
 
 				float tmax = its.t;
 				float t = medium->sampleFreeFlightDistance(sampler->next1D()); //Sample free flying path
-
+				//float t =tmax;
 				if (t < tmax) {
 					//Volume interaction
 					// x=itp.s
@@ -134,7 +135,7 @@ public:
 					result += Le * multiConst;
 
 					if (sampler->next1D() > m_q) {
-						multiConst *= bsdfVal * Tr / ((1.f - m_q));
+						multiConst *= bsdfVal *Tr/ ((1.f - m_q)); //*Tr
 					} else {
 						run = false;
 					}
