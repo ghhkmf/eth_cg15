@@ -91,7 +91,7 @@ public:
 				float dist = (its.p-currentSampledEmitterQuery.p).norm();
 
 				float ems_pdf_ie = currentSampledEmitter->pdf(
-						currentSampledEmitterQuery) *cos_itsNormal_sEmitter/(emitterVector.size());
+						currentSampledEmitterQuery)/(emitterVector.size());// *cos_itsNormal_sEmitter
 
 				float mat_pdf_ie = currentBSDF->pdf(
 						currentBSDFQueryToSampledEmitter);
@@ -142,7 +142,7 @@ public:
 
 					float dist = (its.p-its_sampledDirection.p).norm();
 
-					float ems_pdf_im = emi->pdf(emitterQuerySampledDirection)/(dist*dist*emitterVector.size());
+					float ems_pdf_im = emi->pdf(emitterQuerySampledDirection)/(emitterVector.size()); //dist*dist*
 					float mat_pdf_im = currentBSDFpdf_sDirection;
 
 					w_mat = 1 / (ems_pdf_im + mat_pdf_im);

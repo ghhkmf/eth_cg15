@@ -9,15 +9,16 @@
 	<integrator type="path_mats">
 	</integrator>
 	<-->
-	
+<!--	
 	<integrator type="photonmapper">
 		<float name="photonRadius" value="0.08"/>
 		<integer name="photonCount" value="1000000"/>
 	</integrator>
-<!--
+-->
+
 	<integrator type="volPathTracer">
 	</integrator>	
--->
+
 	<!-- Render the scene as viewed by a perspective camera -->
 	<camera type="perspective">
 		<transform name="toWorld">

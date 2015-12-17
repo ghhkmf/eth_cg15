@@ -90,7 +90,7 @@ public:
 
 					float cos = std::abs(emiRec.n.dot(emiRec.wi));
 
-					result += Ld * getTransmitance(its_x.p, emiRec.p, scene)*cos/(its_x.p-emiRec.p).squaredNorm(); //Returns 0 if blocking object
+					//result += Ld * getTransmitance(its_x.p, emiRec.p, scene)*cos/(its_x.p-emiRec.p).squaredNorm(); //Returns 0 if blocking object
 
 					Ray3f newRay(its_x.p, query.wo);
 
@@ -220,8 +220,8 @@ public:
 					float dist = (its.p - currentSampledEmitterQuery.p).norm();
 
 					float ems_pdf_ie = currentSampledEmitter->pdf(
-							currentSampledEmitterQuery) * cos_itsNormal_sEmitter
-							/ (emitterVector.size());
+							currentSampledEmitterQuery)
+							/ (emitterVector.size());//* cos_itsNormal_sEmitter
 
 					float mat_pdf_ie = currentBSDF->pdf(
 							currentBSDFQueryToSampledEmitter);
@@ -287,7 +287,7 @@ public:
 
 						float ems_pdf_im = emi->pdf(
 								emitterQuerySampledDirection)
-								/ (dist * dist * emitterVector.size());
+								/ (emitterVector.size());//dist * dist *
 						float mat_pdf_im = currentBSDFpdf_sDirection;
 
 						w_mat = 1 / (ems_pdf_im + mat_pdf_im);
