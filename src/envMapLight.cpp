@@ -224,7 +224,7 @@ public:
 
 
 		return m_marginalPDF_array[0][idxs.x()]
-				* m_conditionalPDF_map[idxs.x()][idxs.y()]*m_map.cols()*m_map.rows()/(2*M_PI*std::abs(std::sin(atan2(lRec.p.y(), lRec.p.x()))));
+				* m_conditionalPDF_map[idxs.x()][idxs.y()];//*m_map.cols()*m_map.rows()/(2*M_PI*std::abs(std::sin(atan2(lRec.p.y(), lRec.p.x()))));
 	}
 
 	// Helper Methods ----------------------------------------------------------------------------------

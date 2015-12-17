@@ -107,27 +107,100 @@
 	<div class="twentytwenty-container">
 	    <img src="images/10_1000.png" alt="ex = 10, ey = 1000" class="img-responsive">
 	    <img src="images/1000_10.png" alt="ex = 1000, ey = 10" class="img-responsive">
-
 	</div> <br>
 
 	<h3>Hans</h3>
-	<h4>your feature1</h4>	
-	<p> asdf
+
+
+    <h4>Importance Sampled Environmental Mapping (15p)</h4>
+    <p> Importance sampling an environmental map depends on the intensity distribution of the texture. We implemented the paper from the computer science departement from the university of virginia "Monte Carlo Rendering with Natural illumination". The details of the theory are found in mentioned paper. To improve the quality of the sampling, we implemented a bilinear interpolation of the colors of the texture to avoid a pixelated background image. To sample the environmental light, we apply the inverse method on the precomputed marginal and coditional CDF of the map. To improve performance, we search binary in those vectors for the sampled random value. We also avoid passing big arguments to avoid unnesserary memory stack work. At the end, we convert the PDF of the sampled point in term of the direction on the sphere using the transformation:
+
+    $$
+    \begin{align}
+        p(\theta , \phi) & = p(u,v)*\frac{n_u*n_v}{2*\pi*sin(\theta)}
+    \end{align}
+    $$
+
+
+
+    </p>
+
+<div class="twentytwenty-container">
+<img src="images/envMirror.png" alt="Environmental Mapping with Mirror" class="img-responsive">
+<img src="images/envDielectric.png" alt="Environmental Mapping with Dielectric Glass" class="img-responsive">
+</div> <br>
+
+<img src="images/rnl.png" align="middle"">
+<p>Source: http://www.cs.virginia.edu/~gfx/courses/2007/ImageSynthesis/assignments/sampling.html</p>
+
+
+    <br>
+
+
+    <h4>Translucent BSDF (10p)</h4>
+
+    <img src="images/translucent.png" align="middle"">
+    <p>Source: http://wiki.blender.org/uploads/6/68/Manual_cycles_nodes_bsdf_translucent.png</p>
+
+
+    <p> A translucent BSDF is different then a transparent BSDF. The difference lies in the way how light is scattered after the refraction. We took the dielectric class as basis for the reflection/refraction decision. Afterwards, the refracted part is sampled again either in a uniform way or in a cosine weighted way using the refraction vector as the pole. We expanded the Nori framework such that the PDF of discrete BSDF is not always 0. We check if the queried vector is the produced vector while sampling (for mirror/dielectric/etc.). For the translucent BSDF, if the light is refracted and then scattered, we concatenate the PDFs of both event to acquire the correct probability of sampling exactly that direction.
+
+
+
+        The results werent as expected, the bsdf seems to absorb more light than what should be scattered. We tried to found implementation error, but werent able to do so.
 	</p>
 
 
+    <div class="twentytwenty-container">
+        <img src="images/translucent1.png" alt="Translucent with Albedo 1.f,0.f,0.f" class="img-responsive">
+        <img src="images/translucent2.png" alt="Translucent with Albedo 0.f,1.f,0.f" class="img-responsive">
+    </div> <br>
+
+
+
 	<br>
-	<h4>your feature2</h4>	
-	<p> asdf
+
+    <h4>Euler/Brutus Rendering (5p)</h4>
+	<p> After finishing implementing our features, we copy the code to both clusters Euler and Brutus. At first we tried to manage a git repo, such that all changes were handled by GIT itself. It turned out, that some of the dependencies for Nori werent able to be downloaded. After trying different soluctions, we dicided to simple copy the repo via SCP.
+
+        Another problem was the fact, that in Euler and Brutus there are different compiler version for g++ and gcc. After managing to compile the project( after loading different modules ), XVFB-RUN had to be used to be able to pipe the frames created for the non-existent monitor. Eventhough we manage to, copy, compile and partially run the framework, a final openGL error "GLFW error 65544: GLX: Failed to find a suitable GLXFBConfig" stopped us from using the clusters. We assume that the OpenGl version is not up-to-date and that is the reason for the runtime failure.
+
 	</p>
 	
 	<br>
-	<!-- ================================================================= -->
+	
+
+
+
+    <h4>Volumetric Rendering (30p) </h4>
+    <p> For the volumetric path tracer we had to implement several different things. We introduced a ned MEDIUM tag for the XML configuration, which wee attach to a mesh to define the boundaries of the media. We had to change the scene class and shape to be able to handle different mediums. The parameters given are the scattering constant $$ \sigma_s $$ and the absorbtion coefficient $$\sigma_a$$. Both are given as float numbers in the configuration. For our final rendering, we simulated bounded fog within the aquarium with sigma_s = 0.3 and sigma_a = 0. We created also a new Medium interface class with methods to calculate the transmitance, free flight distance, phase function and others. For this assignment, we decided to simply implement a homogeneous type of media. The interface allows to simply add an heterogen media by implementing a new type of medium. This integrator is based on the path_mis implementation of the last assignment. We had already there the problem that the image is slighty too bright. The problem expanded to this integrator.
+    </p>
+
+
+    <div class="twentytwenty-container">
+        <img src="images/vol9.png" alt="s_a = 0.9,s_s = 0" class="img-responsive">
+        <img src="images/vol6.png" alt="s_a = 0.6,s_s = 0" class="img-responsive">
+        <img src="images/vol3.png" alt="s_a = 0.3,s_s = 0" class="img-responsive">
+    </div> <br>
+
+    <div class="twentytwenty-container">
+        <img src="images/sca9.png" alt="s_a = 0,s_s = 0.9" class="img-responsive">
+        <img src="images/sca6.png" alt="s_a = 0,s_s = 0.6" class="img-responsive">
+        <img src="images/sca2.png" alt="s_a = 0,s_s = 0.2" class="img-responsive">
+    </div> <br>
+
+    <p>
+        We found out, that the Nori framework attaches a diffuse BSDF if none is defined in the config file. We had to use the most similar to transparent BSDF to be able to bound and see the media. For this purpose we used the dielectric BSDF. We also calculated the direct illumination for every point in the scene considerating the transmittance of all the mediums in the scene. We reach here the limits of path tracing, because it is not possible to connect every point in the scene to a light source taking into account the BSDF of the objects on the way. For this task a volumetric photomapping would be required.
+
+    </p>
+
+<!-- ================================================================= -->
 	<h2>Final result</h2>
 
 	<p> Below is our final render! The aquarium consists of two analytical spheres, one for the air-glass intersection and one slightly smaller one for the glass-water intersection with the appropriate refraction indices. On the table we have a spotlight shining through the aquarium. The lamp of the spotlight is a mirror The inside of the lamp holding the imaginary bulb is diffuse so that we can see the reflections better. The aquarium stand is supposed to have the look of a blueish brushed metal using the parameters ex = 5 and ey = 1000. The table is a very diffuse anisotropic material, setting ex = ey = 5. The vase and the clock are both black microfacets. A (hopefully good looking) texture is put on the back wall. Subsurface scattering was supposed to be used for the seahorse, but due to lack of time, it could not be integerated.
 	</p><br>
-	<p>Hans: a few words to your part.
+	<p> The volumetric render captures the fog inside the aquarium giving a surreal perspective to othe picture. Sadly, the environmental map doesnt come to shine except for a little reflection in the aquarium. We use the translucent material for the plants to give a more realistic view of how light would behave. Sadly, through the high brightness of the picture the caustics are not visible and due to lack of computational power we sampled only 512 spp. Summing up: Despite of great struggle solving problems that remained from previous exercises, we are satisfied with the end product.
+
 	</p>
 
 	<h3>Aquarium</h3>
@@ -147,7 +220,7 @@
 <script src="/js/offcanvas.js"></script>
 <script src="resources/jquery.event.move.js"></script>
 <script src="resources/jquery.twentytwenty.js"></script>
-
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 <script>
 $(window).load(function(){$(".twentytwenty-container").twentytwenty({default_offset_pct: 0.5});});

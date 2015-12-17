@@ -91,7 +91,7 @@ public:
 
 					float cos = std::abs(emiRec.n.dot(emiRec.wi));
 
-					result += Ld * getTransmitance(its_x.p, emiRec.p, scene)*cos/(its_x.p-emiRec.p).squaredNorm(); //Returns 0 if blocking object
+					//result += Ld * getTransmitance(its_x.p, emiRec.p, scene)*cos/(its_x.p-emiRec.p).squaredNorm(); //Returns 0 if blocking object
 
 					Ray3f newRay(its_x.p, query.wo);
 
