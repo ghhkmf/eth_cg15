@@ -9,12 +9,12 @@
 	<integrator type="volPathTracer">
 	</integrator>
 	
-	<!-->
+<!--
 	<integrator type="photonmapper">
 		<float name="photonRadius" value="0.08"/>
 		<integer name="photonCount" value="1000000"/>
 	</integrator>
-<-->
+-->
 
 	<integrator type="volPathTracer">
 	</integrator>	
