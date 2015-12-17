@@ -59,6 +59,7 @@ public:
 		zr = 1 / sigmaTPrime;
 		//positive virtual ight
 		zv = zr + 4 * A*D;
+		alpha = sigmaSPrime / sigmaTPrime;
     }
     virtual ~Subsurface() {
         delete m_albedo;
@@ -94,11 +95,16 @@ public:
     }
 
     /// Evaluate the BRDF model
-    virtual Color3f dipoleDiffusion(const BSDFQueryRecord &bRec) const  {
-        /* This is a smooth BRDF -- return zero if the measure
-           is wrong, or when queried for illumination on the backside */
+    virtual Color3f diffusionApprox(const BSDFQueryRecord &bRec) const  {
+        
+		//diffuse reflectance due to dipole source
+		float Rd;
+		float dr; // = ||x-xr||
+		float dv; // = || x − xv ||
+		float first = (sigmaTr*dr + 1)*exp(-sigmaTr*dr) / (sigmaTPrime*dr*dr*dr);
+		float second = zv*(sigmaTr*dv + 1)*exp(-sigmaTr*dv) / (sigmaTPrime*dv*dv*dv);
+		 Rd = alpha / (4 * M_PI)*(first + second);
 		return Color3f(1.0f);
-
     }
 
    
@@ -145,6 +151,7 @@ private:
 	float A;
 	float zr;
 	float  zv;
+	float alpha;
 };
 
 NORI_REGISTER_CLASS(Subsurface, "subsurface");

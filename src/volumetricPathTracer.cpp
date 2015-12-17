@@ -320,6 +320,10 @@ public:
 				}
 			}
 		}
+
+		if(result.x() != result.x())
+			return Color3f(0.f);
+
 		return result;
 
 		/*

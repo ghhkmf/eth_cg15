@@ -217,8 +217,14 @@ public:
 		Point2f idxs;
 		pointToIndex(lRec.p, idxs);
 
+
+		//convert to solid angles
+			float cos_theta_i = std::abs(lRec.n.dot(-lRec.wi));
+
+
+
 		return m_marginalPDF_array[0][idxs.x()]
-				* m_conditionalPDF_map[idxs.x()][idxs.y()];
+				* m_conditionalPDF_map[idxs.x()][idxs.y()]	*(lRec.p - lRec.ref).squaredNorm() / cos_theta_i;
 	}
 
 	// Helper Methods ----------------------------------------------------------------------------------
