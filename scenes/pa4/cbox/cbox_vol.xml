@@ -48,7 +48,7 @@
 
 		<bsdf type="dielectric"/>
 		
-		<medium type="homo">
+		<medium type="homogen">
 		
 		</medium>
 	</mesh>

@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/vnd.microsoft.icon" href="../favicon.ico" />
+
+    <title>Computer Graphics - Final Project</title>
+
+    <link href="resources/bootstrap.min.css" rel="stylesheet">
+    <link href="resources/offcanvas.css" rel="stylesheet">
+    <link href="resources/custom2014.css" rel="stylesheet">
+    <link href="resources/twentytwenty.css" rel="stylesheet" type="text/css" />
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+<div class="container headerBar">
+		<h1>Final Project - Aquarium</h1>
+		<h4>Daniel Luginbühl, Hans Hardmeier</h4>
+</div>
+
+<div class="container contentWrapper">
+<div class="pageContent">
+
+	<!-- ================================================================= -->
+
+	<h2>Inspiration</h2>
+
+	<p> We started off with the following inspiration image shown below, a fishtank held by a metal stand on a table in the living room which we thought would go well to the theme "Classical Elements". The idea was to model the leaves as a semi transluscent material, letting only green light pass through. The fish inside would be modelled using subsurface scattering. The nice metal stand inspired us implement an anisotropic material. In order to make the water appear a bit dirty, we thougth of using volumetric rendering for inside the tank. In addition, this would nicely show how light rays pass through the leaves.</p>
+
+	<h3>Inspiration Image</h3>
+	<div class="twentytwenty-container">
+	    <img src="images/fishtank.jpg" alt="" class="img-responsive">
+	</div> <br>
+
+	<!-- ================================================================= -->
+
+	<h2>Features</h2>
+	<h3>Daniel</h3>
+	<!---=---->	
+	<h4>Scene Creation</h4>
+	I created the whole scene layout with Blender. I quickly learned how to model simple objects, set their uv coordinates and export them using triangulated meshes. The lamp containing the spotlight and the sphere stand were created from scratch. More complicated objects, such as the fish, the plants, stones and the vase were download (http://archive3d.net/). Some objects had to be rescaled. One issue I had was dealing with normals in blender. I had to make sure that when modelling, the normals were always facing outward. One issue which remains is that in Nori, the whole scene gets flipped horizontally if I set it up in Blender. I ignored this issue and accepted it as is. The camera paramters were fine tuned until I was happy with the viewing frustum.
+
+	<!---=---->
+	<h4>Spotlight</h4>
+	<p>A spotlight is a pointlight which only shines in a certain direction (dir). The overall concept of a spotlight can be thought of light only shining through a cone. The borders of the cone are not sharp, there is a certain boundary in which the light intensity fades. One parameers determines the cosine of the beginning of the falloff (F) angle of the cone, in which the full intensity of the emitter is received. The second paramter determins the cosine of the angle of the total width (W) of the cone. At any angles larger than this, the received radiance from this light source is zero. In between these two angles, the intensity linearly decreases, which gives the smooth border effect. The function fallOff() computes the transition range from the center of the cone to the outside, which is total blackness. This implementation works for photon mapping as well. In order to sample a direction from the spotlight, I use the function Warp::squareToUniformSphereCap().
+	</p>	<br>
+
+	<h5>Spotlight parameters:</h5>
+	<p> Below we can see four test images for the spotlight. In the first two, we can se a comparison of a light with soft border and hard borders. In the latter case, F = W, which means that there is no room for a smooth transition.</p>
+	
+	<div class="twentytwenty-container">
+	    <img src="images/7_4.png" alt="F = .7, W = .4" class="img-responsive">
+	    <img src="images/7_7.png" alt="F = .7, W = .7" class="img-responsive">
+
+	</div> <br>
+	<p> In these two images, the total width (W) of the cone is very large. Here, we can se a comparison between a large falloff angle (cosine = .4) and a smaller falloff angle (.95). </p>
+	<div class="twentytwenty-container">
+	    <img src="images/4_3.png" alt="F = .4, W = .3" class="img-responsive">
+	    <img src="images/95_3.png" alt="F = .95, W = .3" class="img-responsive">
+
+	</div> <br>
+
+	<!---=---->
+	<h4>Texture</h4>	
+	<p> My procedural texture is similar to the checkerboard pattern which has a slightly different look. It contains a background color, vertical and horizontal stripes, and different colored squares where the stripes intersect. The implementation works as follows: The uv coordinates are in the range [0,1]. After reading the uv coordinates, I scale the u and v components up. The scales are specified in the xml file by the vector:scale. If both u and v are close enough to an integer value (given by point:delta), I return the first color. If only one of these values are close enough to an integer value, I return a second color. If none of these conditions are fulfilled, I return the last color. In addition, all values can be shifted by vector:shift. I enjoyed implementing this texture, because all different looks can be achieved. It was a challenge to chose the colors and decide what looks good. It can be stretched in either direction, and the stripes can be made larger or smaller, narrower or broader, which is shown below.
+	 </p>
+	<h5>Texture scales:</h5>
+	<div class="twentytwenty-container">
+	    <img src="images/1.png" alt="" class="img-responsive">
+	    <img src="images/2.png" alt="" class="img-responsive">
+	    <img src="images/3.png" alt="" class="img-responsive">
+
+
+	</div> <br>
+	<h5>Texture delta values:</h5>
+
+	<div class="twentytwenty-container">
+	    <img src="images/4.png" alt="delta = (1.5,1.5)" class="img-responsive">
+	    <img src="images/5.png" alt="delta = (.5, .5)" class="img-responsive">
+	    <img src="images/6.png" alt="delta = (.1, .2)" class="img-responsive">
+
+	</div> <br>
+
+	<!---=---->
+	<h4>Anisotropic Brdf</h4>	
+	<p> The anisotropic model is an extention of the microfacet model. I use the same implementation from the microfacet exercise, but use the distribution function from PBRT, p.458. The sampling method is taken from the PBRT as well. The anisotropic model is not radially symmetric. It takes two parameters, ex and ey, which are exponents for microfacets. They are the lengths of the axes of the ellipse for the microfacet orientation. In the following images, we can see what happens when we change ex and ey. They can be in the range of 1 and 10000. If the components are small, the reflections are very diffuse in the respective directions. If they are large, they become very specular. If only one is small and one is large, light prefers to scatter only in one direction. With this, I try to achieve the brushed metal look.
+	</p><br>
+	<p>One issue I had was generating a strong blue diffuse reflection. There is a diffuse and specular component. Since m_kd = 1- m_ks.maxCoeff(), the diffuse part is zero if one of the specular components is set to 1. To solve this, I subtracted the mean coefficient of m_ks to compute m_kd. </p>
+
+	<h5>Reflection parameters:</h5>
+	<p> In the first two  images, we compare the cases in which both parameters are small (10) and both are large (1000). These test images are rendered using photon mapping, but only using very few samples just to show the idea of this model. To lighten the scene, we have an area emitter in the shape of a circle on the top. The diffuse color for these tests is set to Color3f(0.5) </p>
+
+	<div class="twentytwenty-container">
+	    <img src="images/10_10.png" alt="ex = ey = 10" class="img-responsive">
+	    <img src="images/1000_1000.png" alt="ex = ey = 1000" class="img-responsive">
+
+	</div> <br>
+	<p> In these two images, we first set ex very large and ey very small and then do the exact opposite. We can see that in the first image, light prefers to reflect along the vertical axis, and in the second image, it reflects along the horizontal axis.
+	<div class="twentytwenty-container">
+	    <img src="images/10_1000.png" alt="ex = 10, ey = 1000" class="img-responsive">
+	    <img src="images/1000_10.png" alt="ex = 1000, ey = 10" class="img-responsive">
+
+	</div> <br>
+
+	<h3>Hans</h3>
+	<h4>your feature1</h4>	
+	<p> asdf
+	</p>
+
+
+	<br>
+	<h4>your feature2</h4>	
+	<p> asdf
+	</p>
+	
+	<br>
+	<!-- ================================================================= -->
+	<h2>Final result</h2>
+
+	<p> Below is our final render! The aquarium consists of two analytical spheres, one for the air-glass intersection and one slightly smaller one for the glass-water intersection with the appropriate refraction indices. On the table we have a spotlight shining through the aquarium. The lamp of the spotlight is a mirror The inside of the lamp holding the imaginary bulb is diffuse so that we can see the reflections better. The aquarium stand is supposed to have the look of a blueish brushed metal using the parameters ex = 5 and ey = 1000. The table is a very diffuse anisotropic material, setting ex = ey = 5. The vase and the clock are both black microfacets. A (hopefully good looking) texture is put on the back wall. Subsurface scattering was supposed to be used for the seahorse, but due to lack of time, it could not be integerated.
+	</p><br>
+	<p>Hans: a few words to your part.
+	</p>
+
+	<h3>Aquarium</h3>
+	<div class="twentytwenty-container">
+	    <img src="images/final.jpg" alt="" class="img-responsive">
+	</div> <br>
+
+	<!-- ================================================================= -->
+
+</div>
+</div>
+
+
+<!-- Bootstrap core JavaScript -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="resources/bootstrap.min.js"></script>
+<script src="/js/offcanvas.js"></script>
+<script src="resources/jquery.event.move.js"></script>
+<script src="resources/jquery.twentytwenty.js"></script>
+
+
+<script>
+$(window).load(function(){$(".twentytwenty-container").twentytwenty({default_offset_pct: 0.5});});
+</script>
+
+</body>
+</html>
